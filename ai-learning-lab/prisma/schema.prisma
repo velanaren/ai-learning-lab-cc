@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,4 +8,277 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+// ========================================
+// 1. USER MODEL
+// ========================================
+// Multi-user identity management
+model User {
+  id            String          @id @default(cuid())
+  email         String          @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  // Relations
+  authAccounts  AuthAccount[]
+  profile       UserProfile?
+  topics        Topic[]
+  memoryEntries MemoryEntry[]
+  githubConn    GitHubConnection?
+  dluCache      DLUCache[]
+}
+
+// ========================================
+// 2. AUTHACCOUNT MODEL
+// ========================================
+// OAuth link and session management (Google + GitHub)
+model AuthAccount {
+  id                String   @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?  @db.Text
+  access_token      String?  @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?  @db.Text
+  session_state     String?
+
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+// ========================================
+// 3. USERPROFILE MODEL
+// ========================================
+// Stores all 27 confirmed learning contract answers
+model UserProfile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+
+  // Section 1: Background & baseline (3 fields)
+  role           String?                // Application Support Engineer, Software Developer, DevOps-SRE, Student, Other
+  baselineSkills String[]   @default([]) // Multi-select: Linux CLI, Bash scripting, Python, Git, Debugging, None
+  priorExperience String?              // Never, Used basics, Built small things, Used in CI-CD, Used professionally
+
+  // Section 2: Goals & outcomes (3 fields)
+  learningGoals  String[]   @default([])  // Multi-select (max 2): Career transition, Improve current role, Prepare for next topic, Fundamentals, Interview prep
+  desiredOutcomes String[]  @default([]) // Multi-select: Build real apps, Use in CI-CD, Understand internals, Troubleshoot, Interview-ready
+  depthPreference String?               // "use confidently" vs "devops-grade mastery"
+
+  // Section 3: Learning structure (3 fields)
+  learningFlow   String?               // concepts-first, build-first, mix
+  complexityIncrease String?           // gradually one layer at a time, through realistic projects
+  troubleshootingPref String?          // low, some, very important
+
+  // Section 4: Platform & tooling (2 fields)
+  operatingSystem String?              // macOS Intel, macOS Apple Silicon, Linux, Windows WSL
+  installationComfort String?          // yes, prefer minimal setup, prefer cloud where possible
+
+  // Section 5: Time & consistency (3 fields)
+  dailyMinutes   Int?                  // 10-15, 20-30, 45-60 minutes
+  weeklyHours    Int?                  // <5, 5-10, 10+ hours
+  missedDayBehavior String?            // recap+continue, slow down automatically, ask before adjusting
+
+  // Section 6: Learning style & depth (3 fields)
+  understandingHelpers String[] @default([])  // Multi-select: analogies, step-by-step labs, visuals, all
+  frustrationTrigger String?            // oversimplified explanations vs too much theory without practice
+  depthPhilosophy String?               // keep it simple first vs never compromise on accuracy and depth
+
+  // Section 7: Learning comfort & accessibility (7 fields)
+  preferredFormats String[] @default([])    // Multi-select (max 2): text-first, step-by-step labs, diagrams, short clips only, transcript/text only
+  audioVideoPreference String?          // avoid audio-video, short clips only, 5-10 min occasionally, longer videos ok
+  overwhelmTriggers String[] @default([])   // Multi-select (max 2): too many terms, long explanations, too many links, too much UI, setup friction
+  sessionStyle   String?               // one concept per day, one concept + small application, project flow
+  contentOrder   String?               // TL;DR → details, details → summary, example → explanation
+  uiToggles      String[] @default([]) // Multi-select: Focus Mode, Reduced motion, Larger text, High contrast/dark mode
+
+  // Section 8: Application & proof-of-work (3 fields)
+  applicationTypes String[] @default([])   // Multi-select: code/config snippets, running commands, linking GitHub, writing reflections
+  trackingPreference String?            // learning only, learning + applications, learning + applications + evidence
+  proofOfWorkImportance String?         // nice-to-have, important, very important
+
+  user           User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ========================================
+// 4. LEARNINGSTRATEGY MODEL
+// ========================================
+// Derived course design decisions from UserProfile answers
+model LearningStrategy {
+  id                 String   @id @default(cuid())
+  userId             String
+  topicId            String
+
+  startLevel         String   // "beginner", "intermediate", "advanced"
+  phaseWeighting     Json     // { fundamentals: number, application: number, advanced: number }
+  dailySlicePolicy   String   // "one-concept-strict"
+  applicationFrequency String // "optional-frequent", "none", "required-daily"
+  contentFormatPolicy Json    // { video: boolean, diagrams: boolean, text: boolean }
+  linkBudgetPolicy   String   // "minimal", "moderate", "comprehensive"
+
+  @@unique([userId, topicId])
+  @@index([userId])
+}
+
+// ========================================
+// 5. TOPIC MODEL
+// ========================================
+// User's learning topics (multiple per user)
+model Topic {
+  id          String @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  tags        String[] @default([])
+  createdAt   DateTime @default(now())
+
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  graphVersions TopicGraphVersion[]
+  memoryEntries MemoryEntry[]
+
+  @@index([userId])
+}
+
+// ========================================
+// 6. TOPICGRAPHVERSION MODEL
+// ========================================
+// Immutable concept graphs (reproducible learning paths)
+model TopicGraphVersion {
+  id         String @id @default(cuid())
+  topicId    String
+  version    Int
+  createdAt  DateTime @default(now())
+  lockedByUser Boolean @default(false)
+  nodesJson  Json    // Array of Concept nodes
+
+  topic      Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  concepts   Concept[]
+
+  @@unique([topicId, version])
+  @@index([topicId])
+}
+
+// ========================================
+// 7. CONCEPT MODEL
+// ========================================
+// Individual learning nodes within a Topic Graph
+model Concept {
+  id                     String @id @default(cuid())
+  topicGraphVersionId    String
+
+  title                  String
+  prereqIds              String[] @default([])  // Reference to other Concept IDs
+  difficulty             String   // "beginner", "intermediate", "advanced"
+  whyItMatters           String
+  commonConfusions       String[] @default([]) // Array of misconceptions
+  exampleTemplate        String
+  applicationTemplate    String?
+
+  topicGraphVersion      TopicGraphVersion @relation(fields: [topicGraphVersionId], references: [id], onDelete: Cascade)
+
+  @@index([topicGraphVersionId])
+}
+
+// ========================================
+// 8. DAILYPLAN MODEL
+// ========================================
+// Sequenced learning schedule tied to locked graph
+model DailyPlan {
+  id                  String @id @default(cuid())
+  userId              String
+  topicId             String
+  topicGraphVersionId String
+  generatedAt         DateTime @default(now())
+
+  conceptSequence     String[] // Ordered array of Concept IDs
+  completedDays       Int @default(0)
+
+  @@unique([userId, topicId])
+  @@index([userId])
+}
+
+// ========================================
+// 9. MEMORYENTRY MODEL
+// ========================================
+// System of record for learning and application
+model MemoryEntry {
+  id             String @id @default(cuid())
+  userId         String
+  topicId        String
+  conceptId      String
+
+  reflectionText String?
+  actionTaken    String?
+  tags           String[] @default([])
+  createdAt      DateTime @default(now())
+
+  user           User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic          Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  evidenceItems  EvidenceItem[]
+
+  @@index([userId, createdAt])
+  @@index([topicId])
+}
+
+// ========================================
+// 10. EVIDENCEITEM MODEL
+// ========================================
+// Proof-of-work attachments to memory entries
+model EvidenceItem {
+  id            String @id @default(cuid())
+  memoryEntryId String
+
+  type          String  // "github_commit", "github_pr", "github_file", "link", "screenshot", "code_snippet", "output"
+  urlOrBlobRef  String
+  label         String?
+  sourceType    String  // "verifiable" (GitHub) or "self_reported" (manual)
+  visibility    String @default("private") // "private" or "shareable"
+  createdAt     DateTime @default(now())
+
+  memoryEntry   MemoryEntry @relation(fields: [memoryEntryId], references: [id], onDelete: Cascade)
+
+  @@index([memoryEntryId])
+}
+
+// ========================================
+// 11. GITHUBCONNECTION MODEL
+// ========================================
+// GitHub OAuth for evidence import (separate from login)
+model GitHubConnection {
+  id            String @id @default(cuid())
+  userId        String @unique
+  connectedAt   DateTime @default(now())
+  accessToken   String  // Encrypted token for GitHub API
+  scopes        String[] @default([]) // e.g., ["repo:status", "repo:commit"]
+  selectedRepos String[] @default([]) // Repository names to track
+
+  user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ========================================
+// 12. DLUCACHE MODEL
+// ========================================
+// Cache generated Daily Learning Unit content
+model DLUCache {
+  id          String @id @default(cuid())
+  conceptId   String
+  userId      String
+  content     Json    // Complete DLU content (explanation, example, prompts, application)
+  generatedAt DateTime @default(now())
+
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conceptId, userId])
+  @@index([userId])
 }
