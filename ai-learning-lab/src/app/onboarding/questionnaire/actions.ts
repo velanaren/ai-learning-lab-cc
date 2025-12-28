@@ -18,7 +18,7 @@ export async function saveQuestionnaire(answers: Record<string, any>) {
     });
 
     if (existingProfile) {
-      redirect("/dashboard/today");
+      redirect("/onboarding/summary");
       return;
     }
 
@@ -71,7 +71,7 @@ export async function saveQuestionnaire(answers: Record<string, any>) {
       },
     });
 
-    redirect("/dashboard/today");
+    redirect("/onboarding/summary");
   } catch (error) {
     // Re-throw redirect errors (Next.js uses them for navigation)
     if (error instanceof Error && error.message === "NEXT_REDIRECT") {
