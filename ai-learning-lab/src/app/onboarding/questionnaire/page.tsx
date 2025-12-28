@@ -102,6 +102,11 @@ export default async function QuestionnairePage() {
 
       redirect("/dashboard/today");
     } catch (error) {
+      // Re-throw redirect errors (Next.js uses them for navigation)
+      if (error instanceof Error && error.message === "NEXT_REDIRECT") {
+        throw error;
+      }
+
       console.error("Error saving questionnaire:", error);
       // Re-throw to let Next.js error boundary handle it
       throw new Error(

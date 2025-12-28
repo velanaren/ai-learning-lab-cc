@@ -54,7 +54,7 @@ export default async function OnboardingPage() {
       });
 
       if (existingTopic) {
-        redirect("/onboarding/questionnaire");
+        redirect("/dashboard/today");
         return;
       }
 
@@ -68,6 +68,11 @@ export default async function OnboardingPage() {
 
       redirect("/onboarding/questionnaire");
     } catch (error) {
+      // Re-throw redirect errors (Next.js uses them for navigation)
+      if (error instanceof Error && error.message === "NEXT_REDIRECT") {
+        throw error;
+      }
+
       console.error("Error creating topic:", error);
       throw new Error(
         error instanceof Error
