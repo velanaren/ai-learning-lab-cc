@@ -24,7 +24,7 @@ model User {
   updatedAt     DateTime        @updatedAt
 
   // Relations
-  authAccounts  AuthAccount[]
+  accounts      Account[]
   profile       UserProfile?
   topics        Topic[]
   memoryEntries MemoryEntry[]
@@ -33,10 +33,10 @@ model User {
 }
 
 // ========================================
-// 2. AUTHACCOUNT MODEL
+// 2. ACCOUNT MODEL (NextAuth)
 // ========================================
 // OAuth link and session management (Google + GitHub)
-model AuthAccount {
+model Account {
   id                String   @id @default(cuid())
   userId            String
   type              String
