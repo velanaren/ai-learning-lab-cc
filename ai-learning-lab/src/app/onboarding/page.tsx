@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/utils";
 import { prisma } from "@/lib/db/prisma";
+import { classifyTopicWithFallback } from "@/lib/groq/classify-topic";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -70,11 +71,18 @@ export default async function OnboardingPage() {
         return;
       }
 
+      // Classify the topic to determine questionnaire options
+      const classification = await classifyTopicWithFallback(sanitizedTopic);
+      console.log(
+        `Topic "${sanitizedTopic}" classified as "${classification.category}" with confidence ${classification.confidence}`
+      );
+
       await prisma.topic.create({
         data: {
           userId: currentUser.id,
           name: sanitizedTopic,
           description: `Learning ${sanitizedTopic}`,
+          category: classification.category,
         },
       });
 

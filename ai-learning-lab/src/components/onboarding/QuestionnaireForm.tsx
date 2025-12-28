@@ -7,9 +7,11 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { saveQuestionnaire } from "@/app/onboarding/questionnaire/actions";
+import type { CategoryOptions } from "@/lib/config/topic-categories";
 
 interface QuestionnaireFormProps {
   initialAnswers?: Record<string, any>;
+  categoryOptions?: CategoryOptions;
 }
 
 interface SectionProps {
@@ -17,8 +19,13 @@ interface SectionProps {
   updateAnswer: (key: string, value: any) => void;
 }
 
+interface DynamicSectionProps extends SectionProps {
+  options?: CategoryOptions;
+}
+
 export function QuestionnaireForm({
   initialAnswers = {},
+  categoryOptions,
 }: QuestionnaireFormProps) {
   const [currentSection, setCurrentSection] = useState(1);
   const [answers, setAnswers] = useState(initialAnswers);
@@ -140,10 +147,10 @@ export function QuestionnaireForm({
       {/* Section Content */}
       <div className="min-h-[500px] rounded-2xl border border-zinc-200/60 bg-white p-8 shadow-sm transition-all duration-300">
         {currentSection === 1 && (
-          <Section1 answers={answers} updateAnswer={updateAnswer} />
+          <Section1 answers={answers} updateAnswer={updateAnswer} options={categoryOptions} />
         )}
         {currentSection === 2 && (
-          <Section2 answers={answers} updateAnswer={updateAnswer} />
+          <Section2 answers={answers} updateAnswer={updateAnswer} options={categoryOptions} />
         )}
         {currentSection === 3 && (
           <Section3 answers={answers} updateAnswer={updateAnswer} />
@@ -205,8 +212,37 @@ export function QuestionnaireForm({
   );
 }
 
+// Default options for Section 1 (fallback if no category options provided)
+const DEFAULT_SECTION1_OPTIONS = {
+  roles: [
+    { value: "Software Developer", label: "Software Developer" },
+    { value: "DevOps Engineer", label: "DevOps Engineer" },
+    { value: "Support Engineer", label: "Support Engineer" },
+    { value: "Student", label: "Student" },
+    { value: "Other", label: "Other" },
+  ],
+  skills: [
+    { value: "Linux CLI", label: "Linux command line (CLI)" },
+    { value: "Bash scripting", label: "Bash scripting" },
+    { value: "Python", label: "Python programming" },
+    { value: "Git", label: "Git version control" },
+    { value: "Debugging", label: "Debugging and troubleshooting" },
+    { value: "None", label: "None of the above" },
+  ],
+  priorExperience: [
+    { value: "Never", label: "Never used it" },
+    { value: "Used basics", label: "Used the basics" },
+    { value: "Built small things", label: "Built small things with it" },
+    { value: "Used professionally", label: "Used it professionally" },
+  ],
+};
+
 // Section 1: Background & Baseline
-function Section1({ answers, updateAnswer }: SectionProps) {
+function Section1({ answers, updateAnswer, options }: DynamicSectionProps) {
+  const roles = options?.roles || DEFAULT_SECTION1_OPTIONS.roles;
+  const skills = options?.skills || DEFAULT_SECTION1_OPTIONS.skills;
+  const priorExperienceOptions = options?.priorExperience || DEFAULT_SECTION1_OPTIONS.priorExperience;
+
   const handleSkillToggle = (skill: string, checked: boolean) => {
     const currentSkills = answers.baselineSkills || [];
     if (checked) {
@@ -241,51 +277,20 @@ function Section1({ answers, updateAnswer }: SectionProps) {
           onValueChange={(value) => updateAnswer("role", value)}
           className="space-y-3"
         >
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="Application Support Engineer" id="role-support" />
-            <Label
-              htmlFor="role-support"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700 leading-normal break-words"
+          {roles.map((role) => (
+            <div
+              key={role.value}
+              className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50"
             >
-              Application Support Engineer
-            </Label>
-          </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="Software Developer" id="role-developer" />
-            <Label
-              htmlFor="role-developer"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Software Developer
-            </Label>
-          </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="DevOps-SRE" id="role-devops" />
-            <Label
-              htmlFor="role-devops"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              DevOps / SRE
-            </Label>
-          </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="Student" id="role-student" />
-            <Label
-              htmlFor="role-student"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Student
-            </Label>
-          </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="Other" id="role-other" />
-            <Label
-              htmlFor="role-other"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Other
-            </Label>
-          </div>
+              <RadioGroupItem value={role.value} id={`role-${role.value}`} />
+              <Label
+                htmlFor={`role-${role.value}`}
+                className="flex-1 cursor-pointer text-sm font-normal text-zinc-700 leading-normal break-words"
+              >
+                {role.label}
+              </Label>
+            </div>
+          ))}
         </RadioGroup>
       </div>
 
@@ -295,14 +300,7 @@ function Section1({ answers, updateAnswer }: SectionProps) {
           What are you already comfortable with? (Select all that apply)
         </Label>
         <div className="space-y-2">
-          {[
-            { value: "Linux CLI", label: "Linux command line (CLI)" },
-            { value: "Bash scripting", label: "Bash scripting" },
-            { value: "Python", label: "Python programming" },
-            { value: "Git", label: "Git version control" },
-            { value: "Debugging", label: "Debugging and troubleshooting" },
-            { value: "None", label: "None of the above" },
-          ].map((skill) => (
+          {skills.map((skill) => (
             <div
               key={skill.value}
               className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50"
@@ -335,58 +333,54 @@ function Section1({ answers, updateAnswer }: SectionProps) {
           onValueChange={(value) => updateAnswer("priorExperience", value)}
           className="space-y-3"
         >
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="Never" id="exp-never" />
-            <Label
-              htmlFor="exp-never"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
+          {priorExperienceOptions.map((exp) => (
+            <div
+              key={exp.value}
+              className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50"
             >
-              Never used it
-            </Label>
-          </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="Used basics" id="exp-basics" />
-            <Label
-              htmlFor="exp-basics"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Used the basics
-            </Label>
-          </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="Built small things" id="exp-small" />
-            <Label
-              htmlFor="exp-small"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Built small things with it
-            </Label>
-          </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="Used in CI-CD" id="exp-cicd" />
-            <Label
-              htmlFor="exp-cicd"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Used it in CI/CD pipelines
-            </Label>
-          </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="Used professionally" id="exp-pro" />
-            <Label
-              htmlFor="exp-pro"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Used it professionally
-            </Label>
-          </div>
+              <RadioGroupItem value={exp.value} id={`exp-${exp.value}`} />
+              <Label
+                htmlFor={`exp-${exp.value}`}
+                className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
+              >
+                {exp.label}
+              </Label>
+            </div>
+          ))}
         </RadioGroup>
       </div>
     </div>
   );
 }
 
-function Section2({ answers, updateAnswer }: SectionProps) {
+// Default options for Section 2 (fallback if no category options provided)
+const DEFAULT_SECTION2_OPTIONS = {
+  // Learning goals are universal - no need to customize
+  learningGoals: [
+    { value: "Career transition", label: "Career transition into this field" },
+    { value: "Improve current role", label: "Improve performance in current role" },
+    { value: "Prepare for next topic", label: "Prepare for next advanced topic" },
+    { value: "Fundamentals", label: "Build strong fundamentals" },
+    { value: "Interview prep", label: "Interview preparation" },
+  ],
+  outcomes: [
+    { value: "Build real apps", label: "Build real applications" },
+    { value: "Understand internals", label: "Understand how it works internally" },
+    { value: "Troubleshoot", label: "Troubleshoot production issues" },
+    { value: "Interview-ready", label: "Be interview-ready" },
+  ],
+  depthOptions: [
+    { value: "use confidently", label: "Use it confidently in my work" },
+    { value: "expert-level mastery", label: "Expert-level mastery" },
+  ],
+};
+
+function Section2({ answers, updateAnswer, options }: DynamicSectionProps) {
+  // Learning goals are universal, so we keep them static
+  const learningGoals = DEFAULT_SECTION2_OPTIONS.learningGoals;
+  const outcomes = options?.outcomes || DEFAULT_SECTION2_OPTIONS.outcomes;
+  const depthOptions = options?.depthOptions || DEFAULT_SECTION2_OPTIONS.depthOptions;
+
   const handleGoalToggle = (goal: string, checked: boolean) => {
     const currentGoals = answers.learningGoals || [];
     if (checked) {
@@ -432,13 +426,7 @@ function Section2({ answers, updateAnswer }: SectionProps) {
           Why do you want to learn this topic right now? (Pick up to 2)
         </Label>
         <div className="space-y-2">
-          {[
-            { value: "Career transition", label: "Career transition into this field" },
-            { value: "Improve current role", label: "Improve performance in current role" },
-            { value: "Prepare for next topic", label: "Prepare for next advanced topic" },
-            { value: "Fundamentals", label: "Build strong fundamentals" },
-            { value: "Interview prep", label: "Interview preparation" },
-          ].map((goal) => (
+          {learningGoals.map((goal) => (
             <div
               key={goal.value}
               className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50"
@@ -474,13 +462,7 @@ function Section2({ answers, updateAnswer }: SectionProps) {
           What outcomes matter most to you? (Select all that apply)
         </Label>
         <div className="space-y-2">
-          {[
-            { value: "Build real apps", label: "Build real applications" },
-            { value: "Use in CI-CD", label: "Use in CI/CD pipelines" },
-            { value: "Understand internals", label: "Understand how it works internally" },
-            { value: "Troubleshoot", label: "Troubleshoot production issues" },
-            { value: "Interview-ready", label: "Be interview-ready" },
-          ].map((outcome) => (
+          {outcomes.map((outcome) => (
             <div
               key={outcome.value}
               className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50"
@@ -513,24 +495,20 @@ function Section2({ answers, updateAnswer }: SectionProps) {
           onValueChange={(value) => updateAnswer("depthPreference", value)}
           className="space-y-3"
         >
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="use confidently" id="depth-confident" />
-            <Label
-              htmlFor="depth-confident"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
+          {depthOptions.map((depth) => (
+            <div
+              key={depth.value}
+              className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50"
             >
-              Use it confidently in my work
-            </Label>
-          </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="devops-grade mastery" id="depth-mastery" />
-            <Label
-              htmlFor="depth-mastery"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              DevOps-grade mastery
-            </Label>
-          </div>
+              <RadioGroupItem value={depth.value} id={`depth-${depth.value}`} />
+              <Label
+                htmlFor={`depth-${depth.value}`}
+                className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
+              >
+                {depth.label}
+              </Label>
+            </div>
+          ))}
         </RadioGroup>
       </div>
     </div>

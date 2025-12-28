@@ -138,6 +138,7 @@ model Topic {
   userId      String
   name        String
   description String?
+  category    String?  // Topic category for dynamic questionnaire options (devops, frontend, backend, etc.)
   tags        String[] @default([])
   createdAt   DateTime @default(now())
 
