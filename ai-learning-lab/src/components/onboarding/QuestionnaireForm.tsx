@@ -6,9 +6,9 @@ import { Progress } from "@/components/ui/progress";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
+import { saveQuestionnaire } from "@/app/onboarding/questionnaire/actions";
 
 interface QuestionnaireFormProps {
-  onComplete: (answers: Record<string, any>) => void;
   initialAnswers?: Record<string, any>;
 }
 
@@ -18,7 +18,6 @@ interface SectionProps {
 }
 
 export function QuestionnaireForm({
-  onComplete,
   initialAnswers = {},
 }: QuestionnaireFormProps) {
   const [currentSection, setCurrentSection] = useState(1);
@@ -95,8 +94,8 @@ export function QuestionnaireForm({
     if (currentSection < totalSections) {
       setCurrentSection(currentSection + 1);
     } else {
-      startTransition(() => {
-        onComplete(answers);
+      startTransition(async () => {
+        await saveQuestionnaire(answers);
       });
     }
   };

@@ -118,7 +118,7 @@ Each sub-task includes:
 
 **What we're doing:** Building the foundation for our AI Learning Lab application. We'll initialize a Next.js 14 project with TypeScript, install all necessary dependencies (Shadcn/ui for beautiful components, Prisma for database access, NextAuth for authentication, Groq SDK for AI features, and Framer Motion for animations), create an organized directory structure, set up Docker for local PostgreSQL database, and configure code quality tools. This foundation ensures we have a solid, professional development environment before writing any feature code.
 
-- [ ] **1.1 Initialize Next.js 14 project with TypeScript**
+- [x] **1.1 Initialize Next.js 14 project with TypeScript**
 
   **What we're doing:** Creating a new Next.js 14 application using the App Router (the modern Next.js architecture) with TypeScript for type safety and Tailwind CSS for styling.
 
@@ -168,7 +168,7 @@ Each sub-task includes:
 
   **Verification:** Check for `app/` directory, `tailwind.config.ts`, `tsconfig.json` files
 
-- [ ] **1.2 Install required dependencies**
+- [x] **1.2 Install required dependencies**
 
   **What we're doing:** Installing all the npm packages our application needs - Prisma for database, NextAuth for authentication, Groq SDK for AI, Zod for validation, and Framer Motion for animations.
 
@@ -214,7 +214,7 @@ Each sub-task includes:
 
   **Verification:** All packages listed in package.json dependencies
 
-- [ ] **1.3 Setup Shadcn/ui component library**
+- [x] **1.3 Setup Shadcn/ui component library**
 
   **What we're doing:** Installing Shadcn/ui, a collection of beautifully designed, accessible UI components built on Radix UI. This will give us professional-looking buttons, cards, forms, and modals that match our minimalist design aesthetic.
 
@@ -268,7 +268,7 @@ Each sub-task includes:
 
   **Verification:** Check that `components/ui/` directory exists with all component files
 
-- [ ] **1.4 Create src/ directory structure**
+- [x] **1.4 Create src/ directory structure**
 
   **What we're doing:** Organizing our codebase with a clear directory structure. We'll move the `app/` directory into a new `src/` folder and create subdirectories for components, utilities, types, and more. This structure (from the PRD) helps us keep the code organized as the project grows.
 
@@ -328,7 +328,7 @@ Each sub-task includes:
 
   **Verification:** Run `ls src/` - should see app, components, lib, types, styles
 
-- [ ] **1.5 Setup Prisma with PostgreSQL**
+- [x] **1.5 Setup Prisma with PostgreSQL**
 
   **What we're doing:** Initializing Prisma, our database ORM (Object-Relational Mapping) tool. Prisma will help us interact with PostgreSQL using TypeScript instead of writing raw SQL queries. We'll create the initial schema file and configure the database connection.
 
@@ -391,7 +391,7 @@ Each sub-task includes:
 
   **Verification:** Check for `prisma/schema.prisma`, `.env`, and `src/lib/db/prisma.ts`
 
-- [ ] **1.6 Create Docker Compose for local PostgreSQL**
+- [x] **1.6 Create Docker Compose for local PostgreSQL**
 
   **What we're doing:** Setting up Docker Compose to run PostgreSQL database locally. This way, you don't need to install PostgreSQL on your machine - Docker will handle it. We'll also create a `.env.example` file as a template for other developers.
 
@@ -466,7 +466,7 @@ Each sub-task includes:
 
   **Verification:** Files `docker-compose.yml` and `.env.example` exist in project root
 
-- [ ] **1.7 Start PostgreSQL container and verify connection**
+- [x] **1.7 Start PostgreSQL container and verify connection**
 
   **What we're doing:** Launching the PostgreSQL database using Docker and verifying that Prisma can connect to it successfully. This confirms our database is ready for development.
 
@@ -508,7 +508,7 @@ Each sub-task includes:
 
   **Verification:** `docker ps` shows `ai-learning-lab-db` container running
 
-- [ ] **1.8 Configure ESLint and Prettier**
+- [x] **1.8 Configure ESLint and Prettier**
 
   **What we're doing:** Setting up code formatting and linting tools. Prettier will automatically format our code consistently, and ESLint will catch common errors. This ensures our codebase stays clean and professional.
 
@@ -563,7 +563,7 @@ Each sub-task includes:
 
   **Verification:** Run `npm run format:check` - should show "All matched files use Prettier code style!"
 
-- [ ] **1.9 Create initial git commit**
+- [x] **1.9 Create initial git commit**
 
   **What we're doing:** Saving all the foundation work we've done so far in a git commit. This creates a checkpoint we can return to if needed.
 
@@ -629,7 +629,7 @@ Each sub-task includes:
 
 **What we're doing:** Creating the data foundation for our application. We'll define all 11 database models (tables) in Prisma schema - everything from User accounts to Learning topics to Memory entries. Then we'll set up NextAuth.js v5, a powerful authentication library, and configure it to work with both Google and GitHub OAuth (so users can sign in with their existing accounts). This is critical infrastructure that every other feature will depend on.
 
-- [ ] **2.1 Create complete Prisma schema with all models**
+- [x] **2.1 Create complete Prisma schema with all models**
 
   **What we're doing:** Defining the entire database structure with all 11 models from the PRD. This is the single source of truth for our data model - Prisma will use this to create database tables and generate TypeScript types.
 
@@ -705,7 +705,7 @@ Each sub-task includes:
 
   **Verification:** Schema file contains all 11 models with proper relations
 
-- [ ] **2.2 Generate Prisma Client**
+- [x] **2.2 Generate Prisma Client**
 
   **What we're doing:** Running Prisma's code generator to create TypeScript types and database client based on our schema. This gives us type-safe database access throughout the application.
 
@@ -739,7 +739,7 @@ Each sub-task includes:
 
   **Verification:** No errors in output, can import PrismaClient in code
 
-- [ ] **2.3 Run first migration**
+- [x] **2.3 Run first migration**
 
   **What we're doing:** Creating the database tables based on our Prisma schema. This migration will create all 11 tables in PostgreSQL with the correct columns, indexes, and relationships.
 
@@ -777,7 +777,7 @@ Each sub-task includes:
 
   **Verification:** `prisma/migrations/` folder exists with migration file
 
-- [ ] **2.4 Create Prisma client utility with proper singleton**
+- [x] **2.4 Create Prisma client utility with proper singleton**
 
   **What we're doing:** Updating our Prisma client utility to handle Next.js hot reloading properly. This prevents creating multiple database connections during development.
 
@@ -823,7 +823,7 @@ Each sub-task includes:
 
   **Verification:** File exists at `src/lib/db/prisma.ts` with singleton pattern
 
-- [ ] **2.5 Install and configure NextAuth.js v5**
+- [x] **2.5 Install and configure NextAuth.js v5**
 
   **What we're doing:** Setting up NextAuth.js version 5 (beta), the authentication library we'll use for OAuth login. We'll create the core configuration file that defines how authentication works in our app.
 
@@ -903,7 +903,7 @@ Each sub-task includes:
 
   **Verification:** Files exist at `src/lib/auth/auth.config.ts` and `src/lib/auth/auth.ts`
 
-- [ ] **2.6 Create NextAuth API route handler**
+- [x] **2.6 Create NextAuth API route handler**
 
   **What we're doing:** Creating the Next.js API route that NextAuth uses to handle authentication requests (login, logout, callbacks). This is required for NextAuth to function.
 
@@ -944,7 +944,7 @@ Each sub-task includes:
 
   **Verification:** File exists at `src/app/api/auth/[...nextauth]/route.ts`
 
-- [ ] **2.7 Update Prisma schema for NextAuth adapter**
+- [x] **2.7 Update Prisma schema for NextAuth adapter**
 
   **What we're doing:** NextAuth with Prisma adapter expects certain models in our database. We need to ensure our User and AuthAccount models match NextAuth's requirements.
 
@@ -988,7 +988,7 @@ Each sub-task includes:
 
   **Verification:** Schema compatible with NextAuth, no errors when starting app
 
-- [ ] **2.8 Create middleware for protected routes**
+- [x] **2.8 Create middleware for protected routes**
 
   **What we're doing:** Creating Next.js middleware that automatically protects certain routes (like dashboard, onboarding) from unauthenticated access. Users will be redirected to login if they try to access protected pages.
 
@@ -1052,7 +1052,7 @@ Each sub-task includes:
 
   **Verification:** File exists at `src/middleware.ts`
 
-- [ ] **2.9 Create auth utility functions**
+- [x] **2.9 Create auth utility functions**
 
   **What we're doing:** Creating helper functions that we'll use throughout the app to check if a user is logged in, get the current user's session, etc. These utilities make auth easier to work with.
 
@@ -1124,7 +1124,7 @@ Each sub-task includes:
 
   **Verification:** File exists at `src/lib/auth/utils.ts`
 
-- [ ] **2.10 Commit database and auth setup**
+- [x] **2.10 Commit database and auth setup**
 
   **What we're doing:** Saving all our database and authentication work in a git commit.
 
@@ -1166,7 +1166,7 @@ Each sub-task includes:
 
 **What we're doing:** Building the user-facing pages that people see first. We'll create a beautiful landing page that introduces AI Learning Lab, a login page with OAuth buttons for Google and GitHub sign-in, implement the authentication callbacks, and create the initial dashboard layout that users see after logging in. This is the first impression of our product, so we'll make it clean and inviting using our Shadcn/ui components and Tailwind styling.
 
-- [ ] **3.1 Create landing page UI**
+- [x] **3.1 Create landing page UI**
 
   **What we're doing:** Creating the public homepage (`/`) that introduces AI Learning Lab to visitors. This page will have a hero section explaining the product and a call-to-action button to get started.
 
@@ -1267,7 +1267,7 @@ Each sub-task includes:
 
   **Verification:** Visit `http://localhost:3000` to see landing page
 
-- [ ] **3.2 Create login page with OAuth buttons**
+- [x] **3.2 Create login page with OAuth buttons**
 
   **What we're doing:** Building the login page (`/login`) with Google and GitHub sign-in buttons. When users click these buttons, they'll be redirected to the OAuth provider to authenticate.
 
@@ -1356,7 +1356,7 @@ Each sub-task includes:
 
   **Verification:** Visit `/login` to see OAuth buttons
 
-- [ ] **3.3 Setup OAuth credentials for testing**
+- [x] **3.3 Setup OAuth credentials for testing**
 
   **What we're doing:** Getting OAuth credentials from Google Cloud Console and GitHub Settings so we can test login functionality. You'll need to create OAuth apps on both platforms.
 
@@ -1412,7 +1412,7 @@ Each sub-task includes:
 
   **Verification:** .env file contains all OAuth credentials
 
-- [ ] **3.4 Create dashboard layout**
+- [x] **3.4 Create dashboard layout**
 
   **What we're doing:** Creating the main layout for authenticated users' dashboard. This includes the navigation menu and layout structure that will wrap all dashboard pages.
 
