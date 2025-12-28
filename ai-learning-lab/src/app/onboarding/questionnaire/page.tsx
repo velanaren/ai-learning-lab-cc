@@ -33,22 +33,30 @@ export default async function QuestionnairePage() {
   const categoryOptions = getCategoryOptions(category);
 
   return (
-    <div className="min-h-screen bg-[#FBFBFC] py-12">
-      <div className="container mx-auto">
-        {/* Header */}
-        <div className="mb-12 text-center">
-          <h1 className="text-3xl font-medium leading-[1.2] tracking-tight text-zinc-900 sm:text-4xl">
-            Personalize Your Learning
-          </h1>
-          <p className="mt-3 text-base leading-relaxed text-zinc-600 sm:text-lg">
-            Answer a few questions to create your tailored{" "}
-            <span className="font-medium text-zinc-900">{topic.name}</span>{" "}
-            learning path
-          </p>
-        </div>
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-zinc-50 via-white to-zinc-100">
+      {/* Subtle background pattern */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.05),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]" />
 
-        {/* Questionnaire Form */}
-        <QuestionnaireForm categoryOptions={categoryOptions} />
+      <div className="relative py-8 sm:py-12">
+        <div className="container mx-auto">
+          {/* Header */}
+          <div className="mb-8 text-center sm:mb-12">
+            <p className="mb-2 text-sm font-medium uppercase tracking-wider text-zinc-500">
+              Personalize Your Learning
+            </p>
+            <h1 className="text-3xl font-medium tracking-tight text-zinc-900 sm:text-4xl">
+              Let&apos;s customize your{" "}
+              <span className="text-zinc-600">{topic.name}</span> journey
+            </h1>
+            <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-zinc-500">
+              Answer a few questions to create your tailored learning path.
+              This helps us understand how you learn best.
+            </p>
+          </div>
+
+          {/* Questionnaire Form */}
+          <QuestionnaireForm categoryOptions={categoryOptions} />
+        </div>
       </div>
     </div>
   );

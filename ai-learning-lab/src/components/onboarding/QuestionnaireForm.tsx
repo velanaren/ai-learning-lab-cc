@@ -1,11 +1,9 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Check, ArrowRight, ArrowLeft, User, Target, Layers, Monitor, Clock, Brain, Eye, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
 import { saveQuestionnaire } from "@/app/onboarding/questionnaire/actions";
 import type { CategoryOptions } from "@/lib/config/topic-categories";
 
@@ -23,6 +21,151 @@ interface DynamicSectionProps extends SectionProps {
   options?: CategoryOptions;
 }
 
+// Reusable Option Card Component
+interface OptionCardProps {
+  selected: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+  disabled?: boolean;
+}
+
+function OptionCard({ selected, onClick, children, disabled }: OptionCardProps) {
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      whileHover={{ scale: disabled ? 1 : 1.01 }}
+      whileTap={{ scale: disabled ? 1 : 0.99 }}
+      className={`relative flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
+        selected
+          ? "border-zinc-900 bg-zinc-900 text-white shadow-lg shadow-zinc-900/20"
+          : disabled
+            ? "cursor-not-allowed border-zinc-100 bg-zinc-50 opacity-50"
+            : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50"
+      }`}
+    >
+      <div
+        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-200 ${
+          selected
+            ? "border-white bg-white"
+            : "border-zinc-300"
+        }`}
+      >
+        {selected && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+          >
+            <Check className="h-4 w-4 text-zinc-900" />
+          </motion.div>
+        )}
+      </div>
+      <span className={`flex-1 text-sm font-medium leading-relaxed ${selected ? "text-white" : "text-zinc-700"}`}>
+        {children}
+      </span>
+    </motion.button>
+  );
+}
+
+// Multi-select Option Card
+interface MultiOptionCardProps {
+  selected: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+  disabled?: boolean;
+}
+
+function MultiOptionCard({ selected, onClick, children, disabled }: MultiOptionCardProps) {
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      whileHover={{ scale: disabled ? 1 : 1.01 }}
+      whileTap={{ scale: disabled ? 1 : 0.99 }}
+      className={`relative flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
+        selected
+          ? "border-zinc-900 bg-zinc-50"
+          : disabled
+            ? "cursor-not-allowed border-zinc-100 bg-zinc-50 opacity-50"
+            : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50"
+      }`}
+    >
+      <div
+        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border-2 transition-all duration-200 ${
+          selected
+            ? "border-zinc-900 bg-zinc-900"
+            : "border-zinc-300 bg-white"
+        }`}
+      >
+        {selected && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+          >
+            <Check className="h-4 w-4 text-white" />
+          </motion.div>
+        )}
+      </div>
+      <span className={`flex-1 text-sm font-medium leading-relaxed ${selected ? "text-zinc-900" : "text-zinc-700"}`}>
+        {children}
+      </span>
+    </motion.button>
+  );
+}
+
+// Section Header Component
+interface SectionHeaderProps {
+  icon: React.ElementType;
+  title: string;
+  description: string;
+  step: number;
+  totalSteps: number;
+}
+
+function SectionHeader({ icon: Icon, title, description, step, totalSteps }: SectionHeaderProps) {
+  return (
+    <div className="mb-8">
+      <div className="mb-4 flex items-center gap-3">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-900">
+          <Icon className="h-6 w-6 text-white" />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600">
+            Step {step} of {totalSteps}
+          </span>
+        </div>
+      </div>
+      <h2 className="text-2xl font-medium tracking-tight text-zinc-900 sm:text-3xl">
+        {title}
+      </h2>
+      <p className="mt-2 text-base leading-relaxed text-zinc-500">
+        {description}
+      </p>
+    </div>
+  );
+}
+
+// Question Label Component
+interface QuestionLabelProps {
+  children: React.ReactNode;
+  maxSelections?: number;
+}
+
+function QuestionLabel({ children, maxSelections }: QuestionLabelProps) {
+  return (
+    <div className="mb-4">
+      <h3 className="text-base font-medium text-zinc-900">{children}</h3>
+      {maxSelections && (
+        <p className="mt-1 text-sm text-zinc-500">Select up to {maxSelections}</p>
+      )}
+    </div>
+  );
+}
+
 export function QuestionnaireForm({
   initialAnswers = {},
   categoryOptions,
@@ -31,9 +174,12 @@ export function QuestionnaireForm({
   const [answers, setAnswers] = useState(initialAnswers);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [direction, setDirection] = useState(1);
 
   const totalSections = 8;
   const progress = (currentSection / totalSections) * 100;
+
+  const sectionIcons = [User, Target, Layers, Monitor, Clock, Brain, Eye, Briefcase];
 
   const validateSection = (section: number): string | null => {
     switch (section) {
@@ -97,6 +243,7 @@ export function QuestionnaireForm({
     }
 
     setValidationError(null);
+    setDirection(1);
 
     if (currentSection < totalSections) {
       setCurrentSection(currentSection + 1);
@@ -109,6 +256,7 @@ export function QuestionnaireForm({
 
   const handleBack = () => {
     setValidationError(null);
+    setDirection(-1);
     if (currentSection > 1) {
       setCurrentSection(currentSection - 1);
     }
@@ -116,6 +264,7 @@ export function QuestionnaireForm({
 
   const updateAnswer = (key: string, value: any) => {
     setAnswers((prev) => ({ ...prev, [key]: value }));
+    if (validationError) setValidationError(null);
   };
 
   // Warn before leaving page with incomplete questionnaire
@@ -131,80 +280,141 @@ export function QuestionnaireForm({
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [currentSection, totalSections]);
 
+  const slideVariants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 50 : -50,
+      opacity: 0,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+    },
+    exit: (direction: number) => ({
+      x: direction > 0 ? -50 : 50,
+      opacity: 0,
+    }),
+  };
+
+  const renderSection = () => {
+    const props = { answers, updateAnswer };
+    const dynamicProps = { ...props, options: categoryOptions };
+
+    switch (currentSection) {
+      case 1:
+        return <Section1 {...dynamicProps} />;
+      case 2:
+        return <Section2 {...dynamicProps} />;
+      case 3:
+        return <Section3 {...props} />;
+      case 4:
+        return <Section4 {...props} />;
+      case 5:
+        return <Section5 {...props} />;
+      case 6:
+        return <Section6 {...props} />;
+      case 7:
+        return <Section7 {...props} />;
+      case 8:
+        return <Section8 {...props} />;
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="w-full max-w-3xl mx-auto space-y-8 px-4">
-      {/* Progress Indicator */}
-      <div className="space-y-3">
-        <div className="flex justify-between text-sm font-medium">
-          <span className="text-zinc-700">
-            Section {currentSection} of {totalSections}
+    <div className="mx-auto w-full max-w-2xl px-4">
+      {/* Progress Bar */}
+      <div className="mb-8">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex gap-1.5">
+            {Array.from({ length: totalSections }, (_, i) => (
+              <motion.div
+                key={i}
+                className={`h-2 w-8 rounded-full transition-colors duration-300 ${
+                  i + 1 <= currentSection ? "bg-zinc-900" : "bg-zinc-200"
+                }`}
+                initial={false}
+                animate={{
+                  scale: i + 1 === currentSection ? 1.1 : 1,
+                }}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-zinc-500">
+            {Math.round(progress)}%
           </span>
-          <span className="text-zinc-500">{Math.round(progress)}% complete</span>
         </div>
-        <Progress value={progress} className="h-2" />
       </div>
 
       {/* Section Content */}
-      <div className="min-h-[500px] rounded-2xl border border-zinc-200/60 bg-white p-8 shadow-sm transition-all duration-300">
-        {currentSection === 1 && (
-          <Section1 answers={answers} updateAnswer={updateAnswer} options={categoryOptions} />
-        )}
-        {currentSection === 2 && (
-          <Section2 answers={answers} updateAnswer={updateAnswer} options={categoryOptions} />
-        )}
-        {currentSection === 3 && (
-          <Section3 answers={answers} updateAnswer={updateAnswer} />
-        )}
-        {currentSection === 4 && (
-          <Section4 answers={answers} updateAnswer={updateAnswer} />
-        )}
-        {currentSection === 5 && (
-          <Section5 answers={answers} updateAnswer={updateAnswer} />
-        )}
-        {currentSection === 6 && (
-          <Section6 answers={answers} updateAnswer={updateAnswer} />
-        )}
-        {currentSection === 7 && (
-          <Section7 answers={answers} updateAnswer={updateAnswer} />
-        )}
-        {currentSection === 8 && (
-          <Section8 answers={answers} updateAnswer={updateAnswer} />
-        )}
+      <div className="relative min-h-[600px]">
+        <AnimatePresence mode="wait" custom={direction}>
+          <motion.div
+            key={currentSection}
+            custom={direction}
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-xl shadow-zinc-200/30 sm:p-8"
+          >
+            {renderSection()}
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* Validation Error */}
-      {validationError && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {validationError}
-        </div>
-      )}
+      <AnimatePresence>
+        {validationError && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-600"
+          >
+            {validationError}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Navigation Buttons */}
-      <div className="flex justify-between gap-4">
+      <div className="mt-6 flex justify-between gap-4">
         <Button
           type="button"
           variant="outline"
           onClick={handleBack}
           disabled={currentSection === 1}
-          className="rounded-full border-zinc-200 px-9 py-6 text-base font-medium transition-all duration-200 hover:border-zinc-900 hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-14 rounded-2xl border-2 border-zinc-200 px-6 text-base font-medium transition-all duration-200 hover:border-zinc-300 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-8"
         >
+          <ArrowLeft className="mr-2 h-5 w-5" />
           Back
         </Button>
         <Button
           type="button"
           onClick={handleNext}
           disabled={isPending}
-          className="rounded-full px-9 py-6 text-base font-medium shadow-sm transition-all duration-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="group h-14 flex-1 rounded-2xl bg-zinc-900 text-base font-medium shadow-lg shadow-zinc-900/20 transition-all duration-200 hover:bg-zinc-800 hover:shadow-xl hover:shadow-zinc-900/25 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none sm:px-8"
         >
           {isPending ? (
-            <>
-              <span className="mr-2">Processing...</span>
-              <span className="animate-spin">⏳</span>
-            </>
+            <span className="flex items-center gap-2">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                className="h-5 w-5 rounded-full border-2 border-white/30 border-t-white"
+              />
+              Processing...
+            </span>
           ) : currentSection === totalSections ? (
-            "Complete"
+            <span className="flex items-center gap-2">
+              Complete
+              <Check className="h-5 w-5" />
+            </span>
           ) : (
-            "Next"
+            <span className="flex items-center gap-2">
+              Continue
+              <ArrowRight className="h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
+            </span>
           )}
         </Button>
       </div>
@@ -243,119 +453,80 @@ function Section1({ answers, updateAnswer, options }: DynamicSectionProps) {
   const skills = options?.skills || DEFAULT_SECTION1_OPTIONS.skills;
   const priorExperienceOptions = options?.priorExperience || DEFAULT_SECTION1_OPTIONS.priorExperience;
 
-  const handleSkillToggle = (skill: string, checked: boolean) => {
+  const handleSkillToggle = (skill: string) => {
     const currentSkills = answers.baselineSkills || [];
-    if (checked) {
-      updateAnswer("baselineSkills", [...currentSkills, skill]);
+    if (currentSkills.includes(skill)) {
+      updateAnswer("baselineSkills", currentSkills.filter((s: string) => s !== skill));
     } else {
-      updateAnswer(
-        "baselineSkills",
-        currentSkills.filter((s: string) => s !== skill)
-      );
+      updateAnswer("baselineSkills", [...currentSkills, skill]);
     }
   };
 
   return (
     <div className="space-y-8">
-      {/* Section Header */}
-      <div>
-        <h2 className="text-2xl font-medium text-zinc-900">
-          Background & Baseline
-        </h2>
-        <p className="mt-2 text-base leading-relaxed text-zinc-600">
-          Tell us about your current role and experience
-        </p>
-      </div>
+      <SectionHeader
+        icon={User}
+        title="Background & Baseline"
+        description="Tell us about your current role and experience"
+        step={1}
+        totalSteps={8}
+      />
 
-      {/* Q1: Current Role */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium text-zinc-900">
-          What best describes your current role?
-        </Label>
-        <RadioGroup
-          value={answers.role}
-          onValueChange={(value) => updateAnswer("role", value)}
-          className="space-y-3"
-        >
-          {roles.map((role) => (
-            <div
-              key={role.value}
-              className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50"
-            >
-              <RadioGroupItem value={role.value} id={`role-${role.value}`} />
-              <Label
-                htmlFor={`role-${role.value}`}
-                className="flex-1 cursor-pointer text-sm font-normal text-zinc-700 leading-normal break-words"
+      <div className="space-y-8">
+        {/* Q1: Current Role */}
+        <div>
+          <QuestionLabel>What best describes your current role?</QuestionLabel>
+          <div className="space-y-3">
+            {roles.map((role) => (
+              <OptionCard
+                key={role.value}
+                selected={answers.role === role.value}
+                onClick={() => updateAnswer("role", role.value)}
               >
                 {role.label}
-              </Label>
-            </div>
-          ))}
-        </RadioGroup>
-      </div>
+              </OptionCard>
+            ))}
+          </div>
+        </div>
 
-      {/* Q2: Baseline Skills */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium text-zinc-900">
-          What are you already comfortable with? (Select all that apply)
-        </Label>
-        <div className="space-y-2">
-          {skills.map((skill) => (
-            <div
-              key={skill.value}
-              className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50"
-            >
-              <Checkbox
-                id={`skill-${skill.value}`}
-                checked={answers.baselineSkills?.includes(skill.value)}
-                onCheckedChange={(checked) =>
-                  handleSkillToggle(skill.value, checked as boolean)
-                }
-              />
-              <Label
-                htmlFor={`skill-${skill.value}`}
-                className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
+        {/* Q2: Baseline Skills */}
+        <div>
+          <QuestionLabel>What are you already comfortable with?</QuestionLabel>
+          <div className="space-y-3">
+            {skills.map((skill) => (
+              <MultiOptionCard
+                key={skill.value}
+                selected={answers.baselineSkills?.includes(skill.value)}
+                onClick={() => handleSkillToggle(skill.value)}
               >
                 {skill.label}
-              </Label>
-            </div>
-          ))}
+              </MultiOptionCard>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Q3: Prior Experience */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium text-zinc-900">
-          How much have you used this topic before?
-        </Label>
-        <RadioGroup
-          value={answers.priorExperience}
-          onValueChange={(value) => updateAnswer("priorExperience", value)}
-          className="space-y-3"
-        >
-          {priorExperienceOptions.map((exp) => (
-            <div
-              key={exp.value}
-              className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50"
-            >
-              <RadioGroupItem value={exp.value} id={`exp-${exp.value}`} />
-              <Label
-                htmlFor={`exp-${exp.value}`}
-                className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
+        {/* Q3: Prior Experience */}
+        <div>
+          <QuestionLabel>How much have you used this topic before?</QuestionLabel>
+          <div className="space-y-3">
+            {priorExperienceOptions.map((exp) => (
+              <OptionCard
+                key={exp.value}
+                selected={answers.priorExperience === exp.value}
+                onClick={() => updateAnswer("priorExperience", exp.value)}
               >
                 {exp.label}
-              </Label>
-            </div>
-          ))}
-        </RadioGroup>
+              </OptionCard>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-// Default options for Section 2 (fallback if no category options provided)
+// Default options for Section 2
 const DEFAULT_SECTION2_OPTIONS = {
-  // Learning goals are universal - no need to customize
   learningGoals: [
     { value: "Career transition", label: "Career transition into this field" },
     { value: "Improve current role", label: "Improve performance in current role" },
@@ -376,140 +547,90 @@ const DEFAULT_SECTION2_OPTIONS = {
 };
 
 function Section2({ answers, updateAnswer, options }: DynamicSectionProps) {
-  // Learning goals are universal, so we keep them static
   const learningGoals = DEFAULT_SECTION2_OPTIONS.learningGoals;
   const outcomes = options?.outcomes || DEFAULT_SECTION2_OPTIONS.outcomes;
   const depthOptions = options?.depthOptions || DEFAULT_SECTION2_OPTIONS.depthOptions;
 
-  const handleGoalToggle = (goal: string, checked: boolean) => {
+  const handleGoalToggle = (goal: string) => {
     const currentGoals = answers.learningGoals || [];
-    if (checked) {
-      // Limit to max 2 selections
-      if (currentGoals.length < 2) {
-        updateAnswer("learningGoals", [...currentGoals, goal]);
-      }
-    } else {
-      updateAnswer(
-        "learningGoals",
-        currentGoals.filter((g: string) => g !== goal)
-      );
+    if (currentGoals.includes(goal)) {
+      updateAnswer("learningGoals", currentGoals.filter((g: string) => g !== goal));
+    } else if (currentGoals.length < 2) {
+      updateAnswer("learningGoals", [...currentGoals, goal]);
     }
   };
 
-  const handleOutcomeToggle = (outcome: string, checked: boolean) => {
+  const handleOutcomeToggle = (outcome: string) => {
     const currentOutcomes = answers.desiredOutcomes || [];
-    if (checked) {
-      updateAnswer("desiredOutcomes", [...currentOutcomes, outcome]);
+    if (currentOutcomes.includes(outcome)) {
+      updateAnswer("desiredOutcomes", currentOutcomes.filter((o: string) => o !== outcome));
     } else {
-      updateAnswer(
-        "desiredOutcomes",
-        currentOutcomes.filter((o: string) => o !== outcome)
-      );
+      updateAnswer("desiredOutcomes", [...currentOutcomes, outcome]);
     }
   };
 
   return (
     <div className="space-y-8">
-      {/* Section Header */}
-      <div>
-        <h2 className="text-2xl font-medium text-zinc-900">
-          Goals & Outcomes
-        </h2>
-        <p className="mt-2 text-base leading-relaxed text-zinc-600">
-          What do you want to achieve?
-        </p>
-      </div>
+      <SectionHeader
+        icon={Target}
+        title="Goals & Outcomes"
+        description="What do you want to achieve?"
+        step={2}
+        totalSteps={8}
+      />
 
-      {/* Q1: Why learning now (max 2) */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium text-zinc-900">
-          Why do you want to learn this topic right now? (Pick up to 2)
-        </Label>
-        <div className="space-y-2">
-          {learningGoals.map((goal) => (
-            <div
-              key={goal.value}
-              className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50"
-            >
-              <Checkbox
-                id={`goal-${goal.value}`}
-                checked={answers.learningGoals?.includes(goal.value)}
-                onCheckedChange={(checked) =>
-                  handleGoalToggle(goal.value, checked as boolean)
-                }
+      <div className="space-y-8">
+        {/* Q1: Learning Goals (max 2) */}
+        <div>
+          <QuestionLabel maxSelections={2}>Why do you want to learn this topic right now?</QuestionLabel>
+          <div className="space-y-3">
+            {learningGoals.map((goal) => (
+              <MultiOptionCard
+                key={goal.value}
+                selected={answers.learningGoals?.includes(goal.value)}
+                onClick={() => handleGoalToggle(goal.value)}
                 disabled={
                   !answers.learningGoals?.includes(goal.value) &&
-                  (answers.learningGoals?.length >= 2)
+                  answers.learningGoals?.length >= 2
                 }
-              />
-              <Label
-                htmlFor={`goal-${goal.value}`}
-                className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
               >
                 {goal.label}
-              </Label>
-            </div>
-          ))}
+              </MultiOptionCard>
+            ))}
+          </div>
         </div>
-        {answers.learningGoals?.length >= 2 && (
-          <p className="text-sm text-zinc-500">Maximum 2 selections reached</p>
-        )}
-      </div>
 
-      {/* Q2: Desired outcomes */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium text-zinc-900">
-          What outcomes matter most to you? (Select all that apply)
-        </Label>
-        <div className="space-y-2">
-          {outcomes.map((outcome) => (
-            <div
-              key={outcome.value}
-              className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50"
-            >
-              <Checkbox
-                id={`outcome-${outcome.value}`}
-                checked={answers.desiredOutcomes?.includes(outcome.value)}
-                onCheckedChange={(checked) =>
-                  handleOutcomeToggle(outcome.value, checked as boolean)
-                }
-              />
-              <Label
-                htmlFor={`outcome-${outcome.value}`}
-                className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
+        {/* Q2: Desired Outcomes */}
+        <div>
+          <QuestionLabel>What outcomes matter most to you?</QuestionLabel>
+          <div className="space-y-3">
+            {outcomes.map((outcome) => (
+              <MultiOptionCard
+                key={outcome.value}
+                selected={answers.desiredOutcomes?.includes(outcome.value)}
+                onClick={() => handleOutcomeToggle(outcome.value)}
               >
                 {outcome.label}
-              </Label>
-            </div>
-          ))}
+              </MultiOptionCard>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Q3: Depth preference */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium text-zinc-900">
-          How deep do you want to go?
-        </Label>
-        <RadioGroup
-          value={answers.depthPreference}
-          onValueChange={(value) => updateAnswer("depthPreference", value)}
-          className="space-y-3"
-        >
-          {depthOptions.map((depth) => (
-            <div
-              key={depth.value}
-              className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50"
-            >
-              <RadioGroupItem value={depth.value} id={`depth-${depth.value}`} />
-              <Label
-                htmlFor={`depth-${depth.value}`}
-                className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
+        {/* Q3: Depth Preference */}
+        <div>
+          <QuestionLabel>How deep do you want to go?</QuestionLabel>
+          <div className="space-y-3">
+            {depthOptions.map((depth) => (
+              <OptionCard
+                key={depth.value}
+                selected={answers.depthPreference === depth.value}
+                onClick={() => updateAnswer("depthPreference", depth.value)}
               >
                 {depth.label}
-              </Label>
-            </div>
-          ))}
-        </RadioGroup>
+              </OptionCard>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -518,125 +639,73 @@ function Section2({ answers, updateAnswer, options }: DynamicSectionProps) {
 function Section3({ answers, updateAnswer }: SectionProps) {
   return (
     <div className="space-y-8">
-      {/* Section Header */}
-      <div>
-        <h2 className="text-2xl font-medium text-zinc-900">
-          Learning Structure
-        </h2>
-        <p className="mt-2 text-base leading-relaxed text-zinc-600">
-          How do you prefer to learn?
-        </p>
-      </div>
+      <SectionHeader
+        icon={Layers}
+        title="Learning Structure"
+        description="How do you prefer to learn?"
+        step={3}
+        totalSteps={8}
+      />
 
-      {/* Q1: Learning flow preference */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium text-zinc-900">
-          How do you prefer to start learning?
-        </Label>
-        <RadioGroup
-          value={answers.learningFlow}
-          onValueChange={(value) => updateAnswer("learningFlow", value)}
-          className="space-y-3"
-        >
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="concepts-first" id="flow-concepts" />
-            <Label
-              htmlFor="flow-concepts"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Concepts first, then practice
-            </Label>
+      <div className="space-y-8">
+        {/* Q1: Learning Flow */}
+        <div>
+          <QuestionLabel>How do you prefer to start learning?</QuestionLabel>
+          <div className="space-y-3">
+            {[
+              { value: "concepts-first", label: "Concepts first, then practice" },
+              { value: "build-first", label: "Build first, learn concepts as needed" },
+              { value: "mix", label: "Mix of both" },
+            ].map((option) => (
+              <OptionCard
+                key={option.value}
+                selected={answers.learningFlow === option.value}
+                onClick={() => updateAnswer("learningFlow", option.value)}
+              >
+                {option.label}
+              </OptionCard>
+            ))}
           </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="build-first" id="flow-build" />
-            <Label
-              htmlFor="flow-build"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Build first, learn concepts as needed
-            </Label>
-          </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="mix" id="flow-mix" />
-            <Label
-              htmlFor="flow-mix"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Mix of both
-            </Label>
-          </div>
-        </RadioGroup>
-      </div>
+        </div>
 
-      {/* Q2: Complexity increase preference */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium text-zinc-900">
-          How should complexity increase?
-        </Label>
-        <RadioGroup
-          value={answers.complexityIncrease}
-          onValueChange={(value) => updateAnswer("complexityIncrease", value)}
-          className="space-y-3"
-        >
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="gradually one layer at a time" id="complexity-gradual" />
-            <Label
-              htmlFor="complexity-gradual"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Gradually, one layer at a time
-            </Label>
+        {/* Q2: Complexity Increase */}
+        <div>
+          <QuestionLabel>How should complexity increase?</QuestionLabel>
+          <div className="space-y-3">
+            {[
+              { value: "gradually one layer at a time", label: "Gradually, one layer at a time" },
+              { value: "through realistic projects", label: "Through realistic projects" },
+            ].map((option) => (
+              <OptionCard
+                key={option.value}
+                selected={answers.complexityIncrease === option.value}
+                onClick={() => updateAnswer("complexityIncrease", option.value)}
+              >
+                {option.label}
+              </OptionCard>
+            ))}
           </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="through realistic projects" id="complexity-projects" />
-            <Label
-              htmlFor="complexity-projects"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Through realistic projects
-            </Label>
-          </div>
-        </RadioGroup>
-      </div>
+        </div>
 
-      {/* Q3: Troubleshooting importance */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium text-zinc-900">
-          How important is troubleshooting practice?
-        </Label>
-        <RadioGroup
-          value={answers.troubleshootingPref}
-          onValueChange={(value) => updateAnswer("troubleshootingPref", value)}
-          className="space-y-3"
-        >
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="low" id="troubleshoot-low" />
-            <Label
-              htmlFor="troubleshoot-low"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Low priority
-            </Label>
+        {/* Q3: Troubleshooting */}
+        <div>
+          <QuestionLabel>How important is troubleshooting practice?</QuestionLabel>
+          <div className="space-y-3">
+            {[
+              { value: "low", label: "Low priority" },
+              { value: "some", label: "Some practice is good" },
+              { value: "very important", label: "Very important - include lots of it" },
+            ].map((option) => (
+              <OptionCard
+                key={option.value}
+                selected={answers.troubleshootingPref === option.value}
+                onClick={() => updateAnswer("troubleshootingPref", option.value)}
+              >
+                {option.label}
+              </OptionCard>
+            ))}
           </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="some" id="troubleshoot-some" />
-            <Label
-              htmlFor="troubleshoot-some"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Some practice is good
-            </Label>
-          </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="very important" id="troubleshoot-high" />
-            <Label
-              htmlFor="troubleshoot-high"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Very important - include lots of it
-            </Label>
-          </div>
-        </RadioGroup>
+        </div>
       </div>
     </div>
   );
@@ -645,103 +714,55 @@ function Section3({ answers, updateAnswer }: SectionProps) {
 function Section4({ answers, updateAnswer }: SectionProps) {
   return (
     <div className="space-y-8">
-      {/* Section Header */}
-      <div>
-        <h2 className="text-2xl font-medium text-zinc-900">
-          Platform & Tooling
-        </h2>
-        <p className="mt-2 text-base leading-relaxed text-zinc-600">
-          Your development environment
-        </p>
-      </div>
+      <SectionHeader
+        icon={Monitor}
+        title="Platform & Tooling"
+        description="Your development environment"
+        step={4}
+        totalSteps={8}
+      />
 
-      {/* Q1: Operating system */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium text-zinc-900">
-          What operating system will you use?
-        </Label>
-        <RadioGroup
-          value={answers.operatingSystem}
-          onValueChange={(value) => updateAnswer("operatingSystem", value)}
-          className="space-y-3"
-        >
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="macOS Intel" id="os-mac-intel" />
-            <Label
-              htmlFor="os-mac-intel"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              macOS (Intel)
-            </Label>
+      <div className="space-y-8">
+        {/* Q1: Operating System */}
+        <div>
+          <QuestionLabel>What operating system will you use?</QuestionLabel>
+          <div className="space-y-3">
+            {[
+              { value: "macOS Intel", label: "macOS (Intel)" },
+              { value: "macOS Apple Silicon", label: "macOS (Apple Silicon)" },
+              { value: "Linux", label: "Linux" },
+              { value: "Windows WSL", label: "Windows (WSL)" },
+            ].map((option) => (
+              <OptionCard
+                key={option.value}
+                selected={answers.operatingSystem === option.value}
+                onClick={() => updateAnswer("operatingSystem", option.value)}
+              >
+                {option.label}
+              </OptionCard>
+            ))}
           </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="macOS Apple Silicon" id="os-mac-silicon" />
-            <Label
-              htmlFor="os-mac-silicon"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              macOS (Apple Silicon)
-            </Label>
-          </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="Linux" id="os-linux" />
-            <Label
-              htmlFor="os-linux"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Linux
-            </Label>
-          </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="Windows WSL" id="os-wsl" />
-            <Label
-              htmlFor="os-wsl"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Windows (WSL)
-            </Label>
-          </div>
-        </RadioGroup>
-      </div>
+        </div>
 
-      {/* Q2: Installation comfort */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium text-zinc-900">
-          How comfortable are you with software installation?
-        </Label>
-        <RadioGroup
-          value={answers.installationComfort}
-          onValueChange={(value) => updateAnswer("installationComfort", value)}
-          className="space-y-3"
-        >
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="yes" id="install-yes" />
-            <Label
-              htmlFor="install-yes"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Comfortable installing tools myself
-            </Label>
+        {/* Q2: Installation Comfort */}
+        <div>
+          <QuestionLabel>How comfortable are you with software installation?</QuestionLabel>
+          <div className="space-y-3">
+            {[
+              { value: "yes", label: "Comfortable installing tools myself" },
+              { value: "prefer minimal setup", label: "Prefer minimal local setup" },
+              { value: "prefer cloud where possible", label: "Prefer cloud-based solutions" },
+            ].map((option) => (
+              <OptionCard
+                key={option.value}
+                selected={answers.installationComfort === option.value}
+                onClick={() => updateAnswer("installationComfort", option.value)}
+              >
+                {option.label}
+              </OptionCard>
+            ))}
           </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="prefer minimal setup" id="install-minimal" />
-            <Label
-              htmlFor="install-minimal"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Prefer minimal local setup
-            </Label>
-          </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="prefer cloud where possible" id="install-cloud" />
-            <Label
-              htmlFor="install-cloud"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Prefer cloud-based solutions
-            </Label>
-          </div>
-        </RadioGroup>
+        </div>
       </div>
     </div>
   );
@@ -750,560 +771,334 @@ function Section4({ answers, updateAnswer }: SectionProps) {
 function Section5({ answers, updateAnswer }: SectionProps) {
   return (
     <div className="space-y-8">
-      {/* Section Header */}
-      <div>
-        <h2 className="text-2xl font-medium text-zinc-900">
-          Time & Consistency
-        </h2>
-        <p className="mt-2 text-base leading-relaxed text-zinc-600">
-          How much time can you dedicate?
-        </p>
-      </div>
+      <SectionHeader
+        icon={Clock}
+        title="Time & Consistency"
+        description="How much time can you dedicate?"
+        step={5}
+        totalSteps={8}
+      />
 
-      {/* Q1: Daily time budget */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium text-zinc-900">
-          On most days, how much time can you realistically spend?
-        </Label>
-        <RadioGroup
-          value={answers.dailyMinutes}
-          onValueChange={(value) => updateAnswer("dailyMinutes", value)}
-          className="space-y-3"
-        >
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="15" id="daily-15" />
-            <Label
-              htmlFor="daily-15"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              10-15 minutes
-            </Label>
+      <div className="space-y-8">
+        {/* Q1: Daily Time */}
+        <div>
+          <QuestionLabel>On most days, how much time can you realistically spend?</QuestionLabel>
+          <div className="space-y-3">
+            {[
+              { value: "15", label: "10-15 minutes" },
+              { value: "30", label: "20-30 minutes" },
+              { value: "60", label: "45-60 minutes" },
+            ].map((option) => (
+              <OptionCard
+                key={option.value}
+                selected={answers.dailyMinutes === option.value}
+                onClick={() => updateAnswer("dailyMinutes", option.value)}
+              >
+                {option.label}
+              </OptionCard>
+            ))}
           </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="30" id="daily-30" />
-            <Label
-              htmlFor="daily-30"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              20-30 minutes
-            </Label>
-          </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="60" id="daily-60" />
-            <Label
-              htmlFor="daily-60"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              45-60 minutes
-            </Label>
-          </div>
-        </RadioGroup>
-      </div>
+        </div>
 
-      {/* Q2: Weekly time commitment */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium text-zinc-900">
-          How many hours per week can you commit?
-        </Label>
-        <RadioGroup
-          value={answers.weeklyHours}
-          onValueChange={(value) => updateAnswer("weeklyHours", value)}
-          className="space-y-3"
-        >
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="5" id="weekly-5" />
-            <Label
-              htmlFor="weekly-5"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Less than 5 hours
-            </Label>
+        {/* Q2: Weekly Hours */}
+        <div>
+          <QuestionLabel>How many hours per week can you commit?</QuestionLabel>
+          <div className="space-y-3">
+            {[
+              { value: "5", label: "Less than 5 hours" },
+              { value: "10", label: "5-10 hours" },
+              { value: "15", label: "10+ hours" },
+            ].map((option) => (
+              <OptionCard
+                key={option.value}
+                selected={answers.weeklyHours === option.value}
+                onClick={() => updateAnswer("weeklyHours", option.value)}
+              >
+                {option.label}
+              </OptionCard>
+            ))}
           </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="10" id="weekly-10" />
-            <Label
-              htmlFor="weekly-10"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              5-10 hours
-            </Label>
-          </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="15" id="weekly-15" />
-            <Label
-              htmlFor="weekly-15"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              10+ hours
-            </Label>
-          </div>
-        </RadioGroup>
-      </div>
+        </div>
 
-      {/* Q3: Missed day behavior */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium text-zinc-900">
-          If you miss a day, what should happen?
-        </Label>
-        <RadioGroup
-          value={answers.missedDayBehavior}
-          onValueChange={(value) => updateAnswer("missedDayBehavior", value)}
-          className="space-y-3"
-        >
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="recap+continue" id="missed-recap" />
-            <Label
-              htmlFor="missed-recap"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Quick recap, then continue
-            </Label>
+        {/* Q3: Missed Day Behavior */}
+        <div>
+          <QuestionLabel>If you miss a day, what should happen?</QuestionLabel>
+          <div className="space-y-3">
+            {[
+              { value: "recap+continue", label: "Quick recap, then continue" },
+              { value: "slow down automatically", label: "Slow down pace automatically" },
+              { value: "ask before adjusting", label: "Ask me before adjusting" },
+            ].map((option) => (
+              <OptionCard
+                key={option.value}
+                selected={answers.missedDayBehavior === option.value}
+                onClick={() => updateAnswer("missedDayBehavior", option.value)}
+              >
+                {option.label}
+              </OptionCard>
+            ))}
           </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="slow down automatically" id="missed-slow" />
-            <Label
-              htmlFor="missed-slow"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Slow down pace automatically
-            </Label>
-          </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="ask before adjusting" id="missed-ask" />
-            <Label
-              htmlFor="missed-ask"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Ask me before adjusting
-            </Label>
-          </div>
-        </RadioGroup>
+        </div>
       </div>
     </div>
   );
 }
 
 function Section6({ answers, updateAnswer }: SectionProps) {
-  const handleHelperToggle = (helper: string, checked: boolean) => {
+  const handleHelperToggle = (helper: string) => {
     const currentHelpers = answers.understandingHelpers || [];
-    if (checked) {
-      updateAnswer("understandingHelpers", [...currentHelpers, helper]);
+    if (currentHelpers.includes(helper)) {
+      updateAnswer("understandingHelpers", currentHelpers.filter((h: string) => h !== helper));
     } else {
-      updateAnswer(
-        "understandingHelpers",
-        currentHelpers.filter((h: string) => h !== helper)
-      );
+      updateAnswer("understandingHelpers", [...currentHelpers, helper]);
     }
   };
 
   return (
     <div className="space-y-8">
-      {/* Section Header */}
-      <div>
-        <h2 className="text-2xl font-medium text-zinc-900">
-          Learning Style & Depth
-        </h2>
-        <p className="mt-2 text-base leading-relaxed text-zinc-600">
-          How do you understand concepts best?
-        </p>
-      </div>
+      <SectionHeader
+        icon={Brain}
+        title="Learning Style & Depth"
+        description="How do you understand concepts best?"
+        step={6}
+        totalSteps={8}
+      />
 
-      {/* Q1: What helps understanding */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium text-zinc-900">
-          What helps you understand complex systems? (Select all that apply)
-        </Label>
-        <div className="space-y-2">
-          {[
-            { value: "Analogies", label: "Analogies to familiar concepts" },
-            { value: "Step-by-step labs", label: "Step-by-step hands-on labs" },
-            { value: "Diagrams", label: "Diagrams and visual models" },
-            { value: "All of the above", label: "All of the above" },
-          ].map((helper) => (
-            <div
-              key={helper.value}
-              className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50"
-            >
-              <Checkbox
-                id={`helper-${helper.value}`}
-                checked={answers.understandingHelpers?.includes(helper.value)}
-                onCheckedChange={(checked) =>
-                  handleHelperToggle(helper.value, checked as boolean)
-                }
-              />
-              <Label
-                htmlFor={`helper-${helper.value}`}
-                className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
+      <div className="space-y-8">
+        {/* Q1: Understanding Helpers */}
+        <div>
+          <QuestionLabel>What helps you understand complex systems?</QuestionLabel>
+          <div className="space-y-3">
+            {[
+              { value: "Analogies", label: "Analogies to familiar concepts" },
+              { value: "Step-by-step labs", label: "Step-by-step hands-on labs" },
+              { value: "Diagrams", label: "Diagrams and visual models" },
+              { value: "All of the above", label: "All of the above" },
+            ].map((option) => (
+              <MultiOptionCard
+                key={option.value}
+                selected={answers.understandingHelpers?.includes(option.value)}
+                onClick={() => handleHelperToggle(option.value)}
               >
-                {helper.label}
-              </Label>
-            </div>
-          ))}
+                {option.label}
+              </MultiOptionCard>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Q2: What frustrates */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium text-zinc-900">
-          What frustrates you most when learning?
-        </Label>
-        <RadioGroup
-          value={answers.frustrationTrigger}
-          onValueChange={(value) => updateAnswer("frustrationTrigger", value)}
-          className="space-y-3"
-        >
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="oversimplified explanations" id="frustrate-simple" />
-            <Label
-              htmlFor="frustrate-simple"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Oversimplified explanations that skip important details
-            </Label>
+        {/* Q2: Frustration Trigger */}
+        <div>
+          <QuestionLabel>What frustrates you most when learning?</QuestionLabel>
+          <div className="space-y-3">
+            {[
+              { value: "oversimplified explanations", label: "Oversimplified explanations that skip important details" },
+              { value: "too much theory without practice", label: "Too much theory without practical application" },
+            ].map((option) => (
+              <OptionCard
+                key={option.value}
+                selected={answers.frustrationTrigger === option.value}
+                onClick={() => updateAnswer("frustrationTrigger", option.value)}
+              >
+                {option.label}
+              </OptionCard>
+            ))}
           </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="too much theory without practice" id="frustrate-theory" />
-            <Label
-              htmlFor="frustrate-theory"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Too much theory without practical application
-            </Label>
-          </div>
-        </RadioGroup>
-      </div>
+        </div>
 
-      {/* Q3: Depth philosophy */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium text-zinc-900">
-          What's your depth philosophy?
-        </Label>
-        <RadioGroup
-          value={answers.depthPhilosophy}
-          onValueChange={(value) => updateAnswer("depthPhilosophy", value)}
-          className="space-y-3"
-        >
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="keep it simple first" id="depth-simple" />
-            <Label
-              htmlFor="depth-simple"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Keep it simple first, dive deeper later
-            </Label>
+        {/* Q3: Depth Philosophy */}
+        <div>
+          <QuestionLabel>What&apos;s your depth philosophy?</QuestionLabel>
+          <div className="space-y-3">
+            {[
+              { value: "keep it simple first", label: "Keep it simple first, dive deeper later" },
+              { value: "never compromise on accuracy and depth", label: "Never compromise on accuracy and depth" },
+            ].map((option) => (
+              <OptionCard
+                key={option.value}
+                selected={answers.depthPhilosophy === option.value}
+                onClick={() => updateAnswer("depthPhilosophy", option.value)}
+              >
+                {option.label}
+              </OptionCard>
+            ))}
           </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="never compromise on accuracy and depth" id="depth-accurate" />
-            <Label
-              htmlFor="depth-accurate"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Never compromise on accuracy and depth
-            </Label>
-          </div>
-        </RadioGroup>
+        </div>
       </div>
     </div>
   );
 }
 
 function Section7({ answers, updateAnswer }: SectionProps) {
-  const handleFormatToggle = (format: string, checked: boolean) => {
+  const handleFormatToggle = (format: string) => {
     const currentFormats = answers.preferredFormats || [];
-    if (checked) {
-      if (currentFormats.length < 2) {
-        updateAnswer("preferredFormats", [...currentFormats, format]);
-      }
-    } else {
-      updateAnswer(
-        "preferredFormats",
-        currentFormats.filter((f: string) => f !== format)
-      );
+    if (currentFormats.includes(format)) {
+      updateAnswer("preferredFormats", currentFormats.filter((f: string) => f !== format));
+    } else if (currentFormats.length < 2) {
+      updateAnswer("preferredFormats", [...currentFormats, format]);
     }
   };
 
-  const handleTriggerToggle = (trigger: string, checked: boolean) => {
+  const handleTriggerToggle = (trigger: string) => {
     const currentTriggers = answers.overwhelmTriggers || [];
-    if (checked) {
-      if (currentTriggers.length < 2) {
-        updateAnswer("overwhelmTriggers", [...currentTriggers, trigger]);
-      }
-    } else {
-      updateAnswer(
-        "overwhelmTriggers",
-        currentTriggers.filter((t: string) => t !== trigger)
-      );
+    if (currentTriggers.includes(trigger)) {
+      updateAnswer("overwhelmTriggers", currentTriggers.filter((t: string) => t !== trigger));
+    } else if (currentTriggers.length < 2) {
+      updateAnswer("overwhelmTriggers", [...currentTriggers, trigger]);
     }
   };
 
-  const handleToggleUI = (toggle: string, checked: boolean) => {
+  const handleToggleUI = (toggle: string) => {
     const currentToggles = answers.uiToggles || [];
-    if (checked) {
-      updateAnswer("uiToggles", [...currentToggles, toggle]);
+    if (currentToggles.includes(toggle)) {
+      updateAnswer("uiToggles", currentToggles.filter((t: string) => t !== toggle));
     } else {
-      updateAnswer(
-        "uiToggles",
-        currentToggles.filter((t: string) => t !== toggle)
-      );
+      updateAnswer("uiToggles", [...currentToggles, toggle]);
     }
   };
 
   return (
     <div className="space-y-8">
-      {/* Section Header */}
-      <div>
-        <h2 className="text-2xl font-medium text-zinc-900">
-          Learning Comfort & Accessibility
-        </h2>
-        <p className="mt-2 text-base leading-relaxed text-zinc-600">
-          Customize your learning experience
-        </p>
-      </div>
+      <SectionHeader
+        icon={Eye}
+        title="Learning Comfort & Accessibility"
+        description="Customize your learning experience"
+        step={7}
+        totalSteps={8}
+      />
 
-      {/* Q1: Best format (max 2) */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium text-zinc-900">
-          Which format helps you learn best? (Pick up to 2)
-        </Label>
-        <div className="space-y-2">
-          {[
-            { value: "Text-first", label: "Text-first explanations" },
-            { value: "Step-by-step labs", label: "Step-by-step hands-on labs" },
-            { value: "Diagrams", label: "Diagrams and mental models" },
-            { value: "Short clips", label: "Short video clips (≤3 min only)" },
-            { value: "No videos", label: "No videos — transcript/text only" },
-          ].map((format) => (
-            <div
-              key={format.value}
-              className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50"
-            >
-              <Checkbox
-                id={`format-${format.value}`}
-                checked={answers.preferredFormats?.includes(format.value)}
-                onCheckedChange={(checked) =>
-                  handleFormatToggle(format.value, checked as boolean)
-                }
+      <div className="space-y-8">
+        {/* Q1: Preferred Formats (max 2) */}
+        <div>
+          <QuestionLabel maxSelections={2}>Which format helps you learn best?</QuestionLabel>
+          <div className="space-y-3">
+            {[
+              { value: "Text-first", label: "Text-first explanations" },
+              { value: "Step-by-step labs", label: "Step-by-step hands-on labs" },
+              { value: "Diagrams", label: "Diagrams and mental models" },
+              { value: "Short clips", label: "Short video clips (≤3 min only)" },
+              { value: "No videos", label: "No videos — transcript/text only" },
+            ].map((option) => (
+              <MultiOptionCard
+                key={option.value}
+                selected={answers.preferredFormats?.includes(option.value)}
+                onClick={() => handleFormatToggle(option.value)}
                 disabled={
-                  !answers.preferredFormats?.includes(format.value) &&
-                  (answers.preferredFormats?.length >= 2)
+                  !answers.preferredFormats?.includes(option.value) &&
+                  answers.preferredFormats?.length >= 2
                 }
-              />
-              <Label
-                htmlFor={`format-${format.value}`}
-                className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
               >
-                {format.label}
-              </Label>
-            </div>
-          ))}
+                {option.label}
+              </MultiOptionCard>
+            ))}
+          </div>
         </div>
-        {answers.preferredFormats?.length >= 2 && (
-          <p className="text-sm text-zinc-500">Maximum 2 selections reached</p>
-        )}
-      </div>
 
-      {/* Q2: Audio/video preference */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium text-zinc-900">
-          How do you feel about audio/video content?
-        </Label>
-        <RadioGroup
-          value={answers.audioVideoPreference}
-          onValueChange={(value) => updateAnswer("audioVideoPreference", value)}
-          className="space-y-3"
-        >
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="avoid audio-video" id="av-avoid" />
-            <Label
-              htmlFor="av-avoid"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Avoid audio/video completely
-            </Label>
+        {/* Q2: Audio/Video Preference */}
+        <div>
+          <QuestionLabel>How do you feel about audio/video content?</QuestionLabel>
+          <div className="space-y-3">
+            {[
+              { value: "avoid audio-video", label: "Avoid audio/video completely" },
+              { value: "short clips only", label: "Short clips only (≤3 min)" },
+              { value: "5-10 min occasionally", label: "5-10 min videos occasionally" },
+              { value: "longer videos ok", label: "Longer videos are fine" },
+            ].map((option) => (
+              <OptionCard
+                key={option.value}
+                selected={answers.audioVideoPreference === option.value}
+                onClick={() => updateAnswer("audioVideoPreference", option.value)}
+              >
+                {option.label}
+              </OptionCard>
+            ))}
           </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="short clips only" id="av-short" />
-            <Label
-              htmlFor="av-short"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Short clips only (≤3 min)
-            </Label>
-          </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="5-10 min occasionally" id="av-medium" />
-            <Label
-              htmlFor="av-medium"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              5-10 min videos occasionally
-            </Label>
-          </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="longer videos ok" id="av-long" />
-            <Label
-              htmlFor="av-long"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Longer videos are fine
-            </Label>
-          </div>
-        </RadioGroup>
-      </div>
+        </div>
 
-      {/* Q3: Overwhelm triggers (max 2) */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium text-zinc-900">
-          What triggers overwhelm for you? (Pick up to 2)
-        </Label>
-        <div className="space-y-2">
-          {[
-            { value: "Too many terms", label: "Too many new terms at once" },
-            { value: "Long explanations", label: "Long blocks of explanation" },
-            { value: "Too many links", label: "Too many external links" },
-            { value: "Too much UI", label: "Too much UI clutter" },
-            { value: "Setup friction", label: "Complex setup or installation steps" },
-          ].map((trigger) => (
-            <div
-              key={trigger.value}
-              className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50"
-            >
-              <Checkbox
-                id={`trigger-${trigger.value}`}
-                checked={answers.overwhelmTriggers?.includes(trigger.value)}
-                onCheckedChange={(checked) =>
-                  handleTriggerToggle(trigger.value, checked as boolean)
-                }
+        {/* Q3: Overwhelm Triggers (max 2) */}
+        <div>
+          <QuestionLabel maxSelections={2}>What triggers overwhelm for you?</QuestionLabel>
+          <div className="space-y-3">
+            {[
+              { value: "Too many terms", label: "Too many new terms at once" },
+              { value: "Long explanations", label: "Long blocks of explanation" },
+              { value: "Too many links", label: "Too many external links" },
+              { value: "Too much UI", label: "Too much UI clutter" },
+              { value: "Setup friction", label: "Complex setup or installation steps" },
+            ].map((option) => (
+              <MultiOptionCard
+                key={option.value}
+                selected={answers.overwhelmTriggers?.includes(option.value)}
+                onClick={() => handleTriggerToggle(option.value)}
                 disabled={
-                  !answers.overwhelmTriggers?.includes(trigger.value) &&
-                  (answers.overwhelmTriggers?.length >= 2)
+                  !answers.overwhelmTriggers?.includes(option.value) &&
+                  answers.overwhelmTriggers?.length >= 2
                 }
-              />
-              <Label
-                htmlFor={`trigger-${trigger.value}`}
-                className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
               >
-                {trigger.label}
-              </Label>
-            </div>
-          ))}
+                {option.label}
+              </MultiOptionCard>
+            ))}
+          </div>
         </div>
-        {answers.overwhelmTriggers?.length >= 2 && (
-          <p className="text-sm text-zinc-500">Maximum 2 selections reached</p>
-        )}
-      </div>
 
-      {/* Q4: Daily session style */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium text-zinc-900">
-          What's your preferred daily session style?
-        </Label>
-        <RadioGroup
-          value={answers.sessionStyle}
-          onValueChange={(value) => updateAnswer("sessionStyle", value)}
-          className="space-y-3"
-        >
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="one concept per day" id="session-one" />
-            <Label
-              htmlFor="session-one"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              One concept per day
-            </Label>
-          </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="one concept + small application" id="session-concept-app" />
-            <Label
-              htmlFor="session-concept-app"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              One concept + small application
-            </Label>
-          </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="project flow" id="session-project" />
-            <Label
-              htmlFor="session-project"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Multi-day project flow
-            </Label>
-          </div>
-        </RadioGroup>
-      </div>
-
-      {/* Q5: Content order preference */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium text-zinc-900">
-          How do you prefer content to be ordered?
-        </Label>
-        <RadioGroup
-          value={answers.contentOrder}
-          onValueChange={(value) => updateAnswer("contentOrder", value)}
-          className="space-y-3"
-        >
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="TL;DR → details" id="order-tldr" />
-            <Label
-              htmlFor="order-tldr"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              TL;DR first, then details
-            </Label>
-          </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="details → summary" id="order-details" />
-            <Label
-              htmlFor="order-details"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Build up to summary
-            </Label>
-          </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="example → explanation" id="order-example" />
-            <Label
-              htmlFor="order-example"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Example first, explanation after
-            </Label>
-          </div>
-        </RadioGroup>
-      </div>
-
-      {/* Q6: UI comfort toggles */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium text-zinc-900">
-          UI comfort preferences (Select any that apply)
-        </Label>
-        <div className="space-y-2">
-          {[
-            { value: "Focus Mode", label: "Focus Mode (minimal distractions)" },
-            { value: "Reduced motion", label: "Reduced motion" },
-            { value: "Larger text", label: "Larger text" },
-            { value: "High contrast", label: "High contrast / dark mode" },
-          ].map((toggle) => (
-            <div
-              key={toggle.value}
-              className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50"
-            >
-              <Checkbox
-                id={`toggle-${toggle.value}`}
-                checked={answers.uiToggles?.includes(toggle.value)}
-                onCheckedChange={(checked) =>
-                  handleToggleUI(toggle.value, checked as boolean)
-                }
-              />
-              <Label
-                htmlFor={`toggle-${toggle.value}`}
-                className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
+        {/* Q4: Session Style */}
+        <div>
+          <QuestionLabel>What&apos;s your preferred daily session style?</QuestionLabel>
+          <div className="space-y-3">
+            {[
+              { value: "one concept per day", label: "One concept per day" },
+              { value: "one concept + small application", label: "One concept + small application" },
+              { value: "project flow", label: "Multi-day project flow" },
+            ].map((option) => (
+              <OptionCard
+                key={option.value}
+                selected={answers.sessionStyle === option.value}
+                onClick={() => updateAnswer("sessionStyle", option.value)}
               >
-                {toggle.label}
-              </Label>
-            </div>
-          ))}
+                {option.label}
+              </OptionCard>
+            ))}
+          </div>
+        </div>
+
+        {/* Q5: Content Order */}
+        <div>
+          <QuestionLabel>How do you prefer content to be ordered?</QuestionLabel>
+          <div className="space-y-3">
+            {[
+              { value: "TL;DR → details", label: "TL;DR first, then details" },
+              { value: "details → summary", label: "Build up to summary" },
+              { value: "example → explanation", label: "Example first, explanation after" },
+            ].map((option) => (
+              <OptionCard
+                key={option.value}
+                selected={answers.contentOrder === option.value}
+                onClick={() => updateAnswer("contentOrder", option.value)}
+              >
+                {option.label}
+              </OptionCard>
+            ))}
+          </div>
+        </div>
+
+        {/* Q6: UI Toggles */}
+        <div>
+          <QuestionLabel>UI comfort preferences (optional)</QuestionLabel>
+          <div className="space-y-3">
+            {[
+              { value: "Focus Mode", label: "Focus Mode (minimal distractions)" },
+              { value: "Reduced motion", label: "Reduced motion" },
+              { value: "Larger text", label: "Larger text" },
+              { value: "High contrast", label: "High contrast / dark mode" },
+            ].map((option) => (
+              <MultiOptionCard
+                key={option.value}
+                selected={answers.uiToggles?.includes(option.value)}
+                onClick={() => handleToggleUI(option.value)}
+              >
+                {option.label}
+              </MultiOptionCard>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -1311,142 +1106,86 @@ function Section7({ answers, updateAnswer }: SectionProps) {
 }
 
 function Section8({ answers, updateAnswer }: SectionProps) {
-  const handleAppTypeToggle = (appType: string, checked: boolean) => {
+  const handleAppTypeToggle = (appType: string) => {
     const currentTypes = answers.applicationTypes || [];
-    if (checked) {
-      updateAnswer("applicationTypes", [...currentTypes, appType]);
+    if (currentTypes.includes(appType)) {
+      updateAnswer("applicationTypes", currentTypes.filter((t: string) => t !== appType));
     } else {
-      updateAnswer(
-        "applicationTypes",
-        currentTypes.filter((t: string) => t !== appType)
-      );
+      updateAnswer("applicationTypes", [...currentTypes, appType]);
     }
   };
 
   return (
     <div className="space-y-8">
-      {/* Section Header */}
-      <div>
-        <h2 className="text-2xl font-medium text-zinc-900">
-          Application & Proof-of-Work
-        </h2>
-        <p className="mt-2 text-base leading-relaxed text-zinc-600">
-          How do you want to track your progress?
-        </p>
-      </div>
+      <SectionHeader
+        icon={Briefcase}
+        title="Application & Proof-of-Work"
+        description="How do you want to track your progress?"
+        step={8}
+        totalSteps={8}
+      />
 
-      {/* Q1: Comfortable application types */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium text-zinc-900">
-          What kinds of application are you comfortable with? (Select all that apply)
-        </Label>
-        <div className="space-y-2">
-          {[
-            { value: "Code snippets", label: "Writing code/config snippets" },
-            { value: "Terminal commands", label: "Running terminal commands" },
-            { value: "GitHub links", label: "Linking GitHub commits/PRs" },
-            { value: "Reflections", label: "Writing short reflections" },
-          ].map((appType) => (
-            <div
-              key={appType.value}
-              className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50"
-            >
-              <Checkbox
-                id={`app-${appType.value}`}
-                checked={answers.applicationTypes?.includes(appType.value)}
-                onCheckedChange={(checked) =>
-                  handleAppTypeToggle(appType.value, checked as boolean)
-                }
-              />
-              <Label
-                htmlFor={`app-${appType.value}`}
-                className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
+      <div className="space-y-8">
+        {/* Q1: Application Types */}
+        <div>
+          <QuestionLabel>What kinds of application are you comfortable with?</QuestionLabel>
+          <div className="space-y-3">
+            {[
+              { value: "Code snippets", label: "Writing code/config snippets" },
+              { value: "Terminal commands", label: "Running terminal commands" },
+              { value: "GitHub links", label: "Linking GitHub commits/PRs" },
+              { value: "Reflections", label: "Writing short reflections" },
+            ].map((option) => (
+              <MultiOptionCard
+                key={option.value}
+                selected={answers.applicationTypes?.includes(option.value)}
+                onClick={() => handleAppTypeToggle(option.value)}
               >
-                {appType.label}
-              </Label>
-            </div>
-          ))}
+                {option.label}
+              </MultiOptionCard>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Q2: Tracking preference */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium text-zinc-900">
-          What would you like the system to track?
-        </Label>
-        <RadioGroup
-          value={answers.trackingPreference}
-          onValueChange={(value) => updateAnswer("trackingPreference", value)}
-          className="space-y-3"
-        >
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="learning only" id="track-learning" />
-            <Label
-              htmlFor="track-learning"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Learning progress only
-            </Label>
+        {/* Q2: Tracking Preference */}
+        <div>
+          <QuestionLabel>What would you like the system to track?</QuestionLabel>
+          <div className="space-y-3">
+            {[
+              { value: "learning only", label: "Learning progress only" },
+              { value: "learning + applications", label: "Learning + applications" },
+              { value: "learning + applications + evidence", label: "Learning + applications + evidence (GitHub, screenshots)" },
+            ].map((option) => (
+              <OptionCard
+                key={option.value}
+                selected={answers.trackingPreference === option.value}
+                onClick={() => updateAnswer("trackingPreference", option.value)}
+              >
+                {option.label}
+              </OptionCard>
+            ))}
           </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="learning + applications" id="track-learning-app" />
-            <Label
-              htmlFor="track-learning-app"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Learning + applications
-            </Label>
-          </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="learning + applications + evidence" id="track-all" />
-            <Label
-              htmlFor="track-all"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Learning + applications + evidence (GitHub, screenshots)
-            </Label>
-          </div>
-        </RadioGroup>
-      </div>
+        </div>
 
-      {/* Q3: Proof-of-work importance */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium text-zinc-900">
-          How important is it to answer later: "What have I actually done in this topic?"
-        </Label>
-        <RadioGroup
-          value={answers.proofOfWorkImportance}
-          onValueChange={(value) => updateAnswer("proofOfWorkImportance", value)}
-          className="space-y-3"
-        >
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="nice-to-have" id="pow-nice" />
-            <Label
-              htmlFor="pow-nice"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Nice to have
-            </Label>
+        {/* Q3: Proof-of-Work Importance */}
+        <div>
+          <QuestionLabel>How important is it to answer: &quot;What have I actually done?&quot;</QuestionLabel>
+          <div className="space-y-3">
+            {[
+              { value: "nice-to-have", label: "Nice to have" },
+              { value: "important", label: "Important" },
+              { value: "very important", label: "Very important" },
+            ].map((option) => (
+              <OptionCard
+                key={option.value}
+                selected={answers.proofOfWorkImportance === option.value}
+                onClick={() => updateAnswer("proofOfWorkImportance", option.value)}
+              >
+                {option.label}
+              </OptionCard>
+            ))}
           </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="important" id="pow-important" />
-            <Label
-              htmlFor="pow-important"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Important
-            </Label>
-          </div>
-          <div className="flex items-center space-x-3 rounded-xl border border-zinc-200 p-4 transition-all hover:border-zinc-300 hover:bg-zinc-50">
-            <RadioGroupItem value="very important" id="pow-very" />
-            <Label
-              htmlFor="pow-very"
-              className="flex-1 cursor-pointer text-sm font-normal text-zinc-700"
-            >
-              Very important
-            </Label>
-          </div>
-        </RadioGroup>
+        </div>
       </div>
     </div>
   );

@@ -1,353 +1,494 @@
 # AI Learning Lab - Design System
 
 **Philosophy:** "What you make and how it feels are inseparable"
-**Reference:** Inspired by lelezhang.design - minimal, elegant, intentional
+**Reference:** Inspired by lelezhang.design and supernotes.app - minimal, elegant, premium feel
+**Version:** 2.0 (Updated with modern UI patterns)
 
 ---
 
-## 🎨 Core Principles
+## Core Principles
 
-1. **Minimal & Clean** - Remove unnecessary elements, embrace whitespace
-2. **Intentional** - Every element serves a purpose
-3. **Elegant Interactions** - Smooth, delightful micro-interactions
+1. **Minimal & Premium** - Clean, sophisticated UI with subtle depth
+2. **Intentional Motion** - Smooth, purposeful animations using Framer Motion
+3. **Interactive Feedback** - Every interaction should feel responsive
 4. **Readable** - High contrast, generous spacing, clear hierarchy
-5. **Breathing Room** - Don't crowd elements, let them breathe
+5. **Breathing Room** - Generous whitespace, let elements breathe
 
 ---
 
-## 📐 Typography
+## Typography
 
 ### Font Family
 - **Primary:** Instrument Sans (Google Fonts)
-- **Weights:** 400 (regular), 500 (medium), 600 (semibold), 700 (bold)
+- **Weights:** 400 (regular), 500 (medium), 600 (semibold)
 - **Variable:** `--font-instrument-sans`
 
 ### Type Scale & Usage
 
 ```tsx
-// Page Headlines
-<h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-medium leading-[1.2] tracking-tight text-zinc-900">
+// Page Headlines (Large)
+<h1 className="text-3xl font-medium tracking-tight text-zinc-900 sm:text-4xl">
 
 // Section Headings
-<h2 className="text-3xl font-medium text-zinc-900">
+<h2 className="text-2xl font-medium tracking-tight text-zinc-900 sm:text-3xl">
 
 // Card/Component Titles
-<h3 className="text-xl font-medium text-zinc-900">
+<h3 className="text-base font-medium text-zinc-900">
 
 // Body Text (Primary)
-<p className="text-base leading-relaxed text-zinc-600">
-
-// Body Text (Large)
-<p className="text-lg leading-relaxed text-zinc-600">
+<p className="text-base leading-relaxed text-zinc-500">
 
 // Subtext / Captions
-<span className="text-sm text-zinc-500">
+<span className="text-sm text-zinc-400">
 
-// Labels
-<label className="text-sm font-medium text-zinc-700">
+// Labels (Uppercase)
+<p className="text-sm font-medium uppercase tracking-wider text-zinc-500">
 ```
 
 ### Key Rules
 - Use `font-medium` for headings (NOT `font-semibold` or `font-bold`)
+- Use `tracking-tight` for larger headings
 - Use `leading-relaxed` for body text
-- Use `tracking-tight` for large headings
-- Text hierarchy: zinc-900 (primary) → zinc-700 (secondary) → zinc-600 (body) → zinc-500 (muted)
+- Text hierarchy: zinc-900 (primary) → zinc-600 (secondary) → zinc-500 (body) → zinc-400 (muted)
 
 ---
 
-## 🎨 Color Palette
+## Color Palette
 
 ### Background Colors
-```css
---background: #FBFBFC (off-white/cream)
---card-bg: white
---header-bg: white/85 with backdrop-blur
-```
-
-### Text Colors
-```css
---text-primary: zinc-900 (headings, important text)
---text-secondary: zinc-700 (labels, nav items)
---text-body: zinc-600 (paragraphs, descriptions)
---text-muted: zinc-500 (captions, helper text)
-```
-
-### Border Colors
-```css
---border-subtle: border-zinc-200/60 (default for cards, dividers)
---border-interactive: border-zinc-900 (hover states)
-```
-
-### Interactive States
 ```tsx
-// Default → Hover
-text-zinc-700 → text-zinc-900
-border-zinc-200 → border-zinc-900
-bg-zinc-100 → bg-zinc-900 text-white
+// Page backgrounds - subtle gradient
+className="bg-gradient-to-br from-zinc-50 via-white to-zinc-100"
+
+// Subtle pattern overlay
+className="bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.05),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]"
+
+// Card backgrounds
+className="bg-white" // or "bg-white/80 backdrop-blur-xl"
+```
+
+### Interactive Colors
+```tsx
+// Primary actions (buttons, selected states)
+bg-zinc-900 text-white shadow-lg shadow-zinc-900/20
+
+// Secondary/outline buttons
+border-2 border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50
+
+// Selected option cards (single-select)
+border-zinc-900 bg-zinc-900 text-white shadow-lg shadow-zinc-900/20
+
+// Selected option cards (multi-select)
+border-zinc-900 bg-zinc-50
+
+// Error states
+border-red-200 bg-red-50 text-red-600
 ```
 
 ---
 
-## 🧩 Component Patterns
+## Component Patterns
 
-### Cards
+### Page Layout Container
 
 ```tsx
-<div className="flex flex-col gap-5 rounded-2xl border border-zinc-200/60 bg-white p-8 shadow-sm transition-all duration-300 hover:shadow-md">
-  {/* Icon */}
-  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-zinc-100 transition-colors group-hover:bg-zinc-900 group-hover:text-white">
-    <Icon className="h-6 w-6 text-zinc-700 group-hover:text-white transition-colors" />
-  </div>
+<div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-zinc-50 via-white to-zinc-100">
+  {/* Background pattern */}
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.05),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]" />
 
   {/* Content */}
-  <div className="flex flex-col gap-3">
-    <h3 className="text-xl font-medium text-zinc-900">Title</h3>
-    <p className="text-base leading-relaxed text-zinc-600">Description</p>
+  <div className="relative py-8 sm:py-12">
+    {/* ... */}
   </div>
 </div>
 ```
 
-**Key Properties:**
-- Border radius: `rounded-2xl`
-- Border: `border-zinc-200/60`
-- Padding: `p-8` (generous)
-- Gap: `gap-5` for icon/content, `gap-3` for text elements
-- Shadow: `shadow-sm` → `shadow-md` on hover
-- Transition: `transition-all duration-300`
-
-### Buttons
+### Cards (Premium Style)
 
 ```tsx
-// Primary Button
-<Button className="rounded-full px-9 py-6 text-base font-medium shadow-sm transition-all hover:shadow-md">
-  Get Started
-</Button>
+// Main content card
+<div className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-xl shadow-zinc-200/30 sm:p-8">
+  {/* Content */}
+</div>
 
-// Secondary/Ghost Button
-<Button variant="ghost" className="rounded-full px-9 py-6 text-base font-medium text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900">
-  Learn More
-</Button>
-
-// Outline Button
-<Button variant="outline" className="rounded-full border-zinc-200 py-7 text-base font-medium hover:border-zinc-900 hover:bg-zinc-50">
-  Sign In
-</Button>
+// Glassmorphism card (for floating elements)
+<div className="rounded-3xl border border-zinc-200/80 bg-white/80 p-8 shadow-xl shadow-zinc-200/50 backdrop-blur-xl">
+  {/* Content */}
+</div>
 ```
 
 **Key Properties:**
-- Shape: `rounded-full` (always)
-- Padding: `px-9 py-6` for normal, `py-7` for larger
+- Border radius: `rounded-3xl` (for main cards)
+- Border: `border border-zinc-200/80`
+- Shadow: `shadow-xl shadow-zinc-200/30`
+- Padding: `p-6 sm:p-8`
+
+### Option Cards (Single Select)
+
+```tsx
+<motion.button
+  whileHover={{ scale: 1.01 }}
+  whileTap={{ scale: 0.99 }}
+  className={`relative flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
+    selected
+      ? "border-zinc-900 bg-zinc-900 text-white shadow-lg shadow-zinc-900/20"
+      : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50"
+  }`}
+>
+  {/* Radio indicator */}
+  <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 ${
+    selected ? "border-white bg-white" : "border-zinc-300"
+  }`}>
+    {selected && <Check className="h-4 w-4 text-zinc-900" />}
+  </div>
+  <span>{children}</span>
+</motion.button>
+```
+
+### Option Cards (Multi Select)
+
+```tsx
+<motion.button
+  whileHover={{ scale: 1.01 }}
+  whileTap={{ scale: 0.99 }}
+  className={`relative flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
+    selected
+      ? "border-zinc-900 bg-zinc-50"
+      : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50"
+  }`}
+>
+  {/* Checkbox indicator */}
+  <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border-2 ${
+    selected ? "border-zinc-900 bg-zinc-900" : "border-zinc-300 bg-white"
+  }`}>
+    {selected && <Check className="h-4 w-4 text-white" />}
+  </div>
+  <span>{children}</span>
+</motion.button>
+```
+
+### Primary Buttons
+
+```tsx
+<Button
+  className="group h-14 rounded-2xl bg-zinc-900 px-8 text-base font-medium shadow-lg shadow-zinc-900/20 transition-all duration-200 hover:bg-zinc-800 hover:shadow-xl hover:shadow-zinc-900/25"
+>
+  <span className="flex items-center gap-2">
+    Continue
+    <ArrowRight className="h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
+  </span>
+</Button>
+```
+
+### Secondary/Outline Buttons
+
+```tsx
+<Button
+  variant="outline"
+  className="h-14 rounded-2xl border-2 border-zinc-200 px-8 text-base font-medium transition-all duration-200 hover:border-zinc-300 hover:bg-zinc-50"
+>
+  Back
+</Button>
+```
+
+**Button Key Properties:**
+- Height: `h-14`
+- Border radius: `rounded-2xl`
+- Padding: `px-8`
 - Font: `text-base font-medium`
-- Transition: `transition-all duration-200`
-- Shadow on primary: `shadow-sm` → `shadow-md` on hover
+- Shadow on primary: `shadow-lg shadow-zinc-900/20`
 
 ### Form Inputs
 
 ```tsx
-<input className="w-full rounded-xl border border-zinc-200 px-4 py-3 text-base transition-all focus:border-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-2" />
+<Input
+  className="h-14 rounded-2xl border-zinc-200 bg-zinc-50/50 pl-5 pr-5 text-base transition-all duration-200 placeholder:text-zinc-400 focus:border-zinc-400 focus:bg-white focus:ring-2 focus:ring-zinc-900/10"
+/>
 ```
 
-**Key Properties:**
-- Border radius: `rounded-xl`
-- Border: `border-zinc-200`
-- Padding: `px-4 py-3`
-- Focus state: border changes to zinc-900, adds ring
-
-### Navigation Items
+### Progress Indicators
 
 ```tsx
-<Link className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-all ${
-  isActive
-    ? "bg-zinc-900 text-white shadow-sm"
-    : "text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900"
-}`}>
-  <Icon className="h-4 w-4" />
-  <span>Label</span>
-</Link>
+// Segmented progress bar
+<div className="flex gap-1.5">
+  {Array.from({ length: totalSteps }, (_, i) => (
+    <motion.div
+      key={i}
+      className={`h-2 w-8 rounded-full transition-colors duration-300 ${
+        i + 1 <= currentStep ? "bg-zinc-900" : "bg-zinc-200"
+      }`}
+      animate={{ scale: i + 1 === currentStep ? 1.1 : 1 }}
+    />
+  ))}
+</div>
 ```
 
-**Key Properties:**
-- Shape: `rounded-full`
-- Padding: `px-5 py-2.5`
-- Active state: dark background with shadow
-- Inactive: subtle hover effect
+### Section Headers (with icon)
+
+```tsx
+<div className="mb-8">
+  <div className="mb-4 flex items-center gap-3">
+    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-900">
+      <Icon className="h-6 w-6 text-white" />
+    </div>
+    <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600">
+      Step {step} of {totalSteps}
+    </span>
+  </div>
+  <h2 className="text-2xl font-medium tracking-tight text-zinc-900 sm:text-3xl">
+    {title}
+  </h2>
+  <p className="mt-2 text-base leading-relaxed text-zinc-500">
+    {description}
+  </p>
+</div>
+```
+
+### Loading Spinner
+
+```tsx
+<motion.div
+  animate={{ rotate: 360 }}
+  transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+  className="h-5 w-5 rounded-full border-2 border-white/30 border-t-white"
+/>
+```
+
+### Skeleton Loading
+
+```tsx
+<div className="space-y-3">
+  <div className="h-6 w-48 animate-pulse rounded-lg bg-zinc-100" />
+  <div className="h-4 w-full animate-pulse rounded-lg bg-zinc-100" />
+  <div className="h-4 w-5/6 animate-pulse rounded-lg bg-zinc-100" />
+</div>
+```
 
 ---
 
-## 📏 Spacing System
+## Animation Patterns
+
+### Framer Motion Imports
+```tsx
+import { motion, AnimatePresence } from "framer-motion";
+```
+
+### Page/Card Enter Animation
+```tsx
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+>
+```
+
+### Staggered Children Animation
+```tsx
+{items.map((item, index) => (
+  <motion.div
+    key={item.id}
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: 0.1 + index * 0.1, duration: 0.5 }}
+  >
+    {/* Content */}
+  </motion.div>
+))}
+```
+
+### Section Slide Animation (multi-step forms)
+```tsx
+const slideVariants = {
+  enter: (direction: number) => ({
+    x: direction > 0 ? 50 : -50,
+    opacity: 0,
+  }),
+  center: { x: 0, opacity: 1 },
+  exit: (direction: number) => ({
+    x: direction > 0 ? -50 : 50,
+    opacity: 0,
+  }),
+};
+
+<AnimatePresence mode="wait" custom={direction}>
+  <motion.div
+    key={currentSection}
+    custom={direction}
+    variants={slideVariants}
+    initial="enter"
+    animate="center"
+    exit="exit"
+    transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+  >
+    {/* Section content */}
+  </motion.div>
+</AnimatePresence>
+```
+
+### Interactive Feedback
+```tsx
+<motion.button
+  whileHover={{ scale: 1.01 }}
+  whileTap={{ scale: 0.99 }}
+>
+```
+
+### Check Icon Animation
+```tsx
+{selected && (
+  <motion.div
+    initial={{ scale: 0 }}
+    animate={{ scale: 1 }}
+    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+  >
+    <Check className="h-4 w-4" />
+  </motion.div>
+)}
+```
+
+---
+
+## Spacing System
 
 ### Container Padding
 ```tsx
-// Mobile → Desktop
-px-6 md:px-8
+px-4 sm:px-6 lg:px-8
+```
+
+### Card Internal Padding
+```tsx
+p-6 sm:p-8
 ```
 
 ### Section Spacing
 ```tsx
-// Vertical padding for sections
-py-12  // Small sections
-py-16  // Medium sections
-py-24  // Large sections
-py-32  // Hero sections (desktop)
-```
-
-### Component Spacing
-```tsx
-gap-3  // Tight (text elements)
-gap-4  // Default
-gap-5  // Comfortable (card internals)
-gap-6  // Spacious
-gap-8  // Wide (between major sections)
+py-8 sm:py-12  // Page sections
+mb-8 sm:mb-10  // Header to content
+mt-6           // Between action areas
 ```
 
 ### Element Spacing
 ```tsx
-mt-2   // Tight
-mt-3   // Default
-mt-4   // Comfortable
-mt-6   // Spacious
+gap-3   // Option cards, form fields
+gap-4   // Feature cards
+space-y-8  // Question groups
 ```
 
 ---
 
-## ✨ Animations & Transitions
-
-### Transition Durations
-```tsx
-duration-150  // Quick interactions (view transitions)
-duration-200  // Button hovers, focus states
-duration-300  // Card hovers, larger elements
-duration-700  // Page entrance animations
-```
-
-### Common Patterns
-
-```tsx
-// Fade in on page load
-className="animate-in fade-in slide-in-from-bottom-4 duration-700"
-
-// Staggered delays
-delay-100  // Second element
-delay-200  // Third element
-delay-300  // Fourth element
-
-// Hover transitions
-className="transition-all hover:scale-105"
-className="transition-transform group-hover:translate-x-1"
-className="transition-colors group-hover:bg-zinc-900"
-```
-
-### View Transitions (Page Navigation)
-- Enabled via CSS in `globals.css`
-- Duration: `0.15s` (150ms)
-- Applied automatically to page changes
-
----
-
-## 🎭 Interactive States
-
-### Hover Effects
-
-```tsx
-// Buttons
-hover:shadow-md
-hover:bg-zinc-50
-hover:border-zinc-900
-
-// Cards
-hover:shadow-md
-group-hover:bg-zinc-900 (for icons)
-group-hover:text-white
-
-// Links
-hover:text-zinc-900
-hover:bg-zinc-100
-```
-
-### Focus States
-```tsx
-focus:outline-none
-focus:ring-2
-focus:ring-zinc-900
-focus:ring-offset-2
-```
-
-### Active States
-```tsx
-// Navigation
-bg-zinc-900 text-white shadow-sm
-
-// Buttons
-active:scale-95
-```
-
----
-
-## 📱 Responsive Design
+## Responsive Design
 
 ### Breakpoint Usage
 ```tsx
 // Mobile-first approach
-className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl"
-className="py-24 md:py-32"
-className="gap-6 md:gap-8 lg:gap-10"
-className="grid md:grid-cols-2 lg:grid-cols-3"
+className="text-3xl sm:text-4xl"
+className="p-6 sm:p-8"
+className="flex-col sm:flex-row"
+className="py-8 sm:py-12"
 ```
 
-### Common Patterns
+### Common Responsive Patterns
 ```tsx
-// Mobile menu
-<div className="md:hidden">Mobile content</div>
-<div className="hidden md:flex">Desktop content</div>
+// Buttons (stack on mobile, row on desktop)
+<div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
 
-// Responsive spacing
-className="px-4 md:px-6 lg:px-8"
-
-// Responsive layout
-className="flex-col sm:flex-row"
+// Cards (full width with max-width)
+<div className="mx-auto w-full max-w-xl">
 ```
 
 ---
 
-## 🎯 Implementation Checklist
+## Icon Usage
+
+### Lucide React Icons
+```tsx
+import {
+  ArrowRight,
+  ArrowLeft,
+  Check,
+  Sparkles,
+  Target,
+  BookOpen,
+  Zap,
+  User,
+  Clock,
+  Brain,
+  Eye,
+  Briefcase,
+  AlertCircle,
+  Pencil
+} from "lucide-react";
+```
+
+### Icon Sizes
+```tsx
+h-4 w-4  // Small (badges, inline)
+h-5 w-5  // Medium (buttons, actions)
+h-6 w-6  // Large (section headers)
+h-7 w-7  // Extra large (alerts)
+```
+
+---
+
+## Implementation Checklist
 
 When building a new component or page, ensure:
 
 - [ ] Uses Instrument Sans font family
-- [ ] Headings use `font-medium` (not semibold/bold)
-- [ ] Text follows color hierarchy (900 → 700 → 600 → 500)
-- [ ] Buttons are `rounded-full` with proper padding
-- [ ] Cards use `rounded-2xl` with `border-zinc-200/60`
-- [ ] Generous spacing (gap-5, gap-8, py-24, etc.)
-- [ ] Smooth transitions (duration-200/300)
-- [ ] Hover states on interactive elements
-- [ ] Focus states for accessibility
-- [ ] Backdrop blur on overlays/headers
-- [ ] Shadows: `shadow-sm` → `shadow-md` on hover
+- [ ] Headings use `font-medium` and `tracking-tight`
+- [ ] Text follows color hierarchy (900 → 600 → 500 → 400)
+- [ ] Buttons are `rounded-2xl` with `h-14` height
+- [ ] Cards use `rounded-3xl` with `shadow-xl shadow-zinc-200/30`
+- [ ] Page uses gradient background with pattern overlay
+- [ ] Interactive elements have Framer Motion animations
+- [ ] Option cards have proper selected/unselected states
+- [ ] Loading states use skeleton or spinner animations
+- [ ] Proper spacing (gap-3, space-y-8, etc.)
 - [ ] Mobile-first responsive design
+- [ ] Focus states for accessibility
 
 ---
 
-## 💬 How to Use This File
+## Quick Copy Patterns
 
-### For New Features
-When asking Claude to build a new feature, reference this file:
+### Full Page Wrapper
+```tsx
+<div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-zinc-50 via-white to-zinc-100">
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.05),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]" />
+  <div className="relative py-8 sm:py-12">
+    <div className="container mx-auto max-w-3xl px-4 sm:px-6">
+      {/* Content */}
+    </div>
+  </div>
+</div>
+```
 
-> "Build [feature] following the design system in DESIGN_SYSTEM.md"
+### Card with Animation
+```tsx
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.5, delay: 0.1 }}
+  className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-xl shadow-zinc-200/30 sm:p-8"
+>
+  {/* Content */}
+</motion.div>
+```
 
-### For Specific Components
-> "Create a settings page card layout using the card pattern from DESIGN_SYSTEM.md"
-
-### For Consistency Checks
-> "Review this component and ensure it matches DESIGN_SYSTEM.md principles"
-
-### Quick Reference
-Copy these patterns directly into your components and adjust content as needed.
+### Primary Action Button
+```tsx
+<Button className="group h-14 rounded-2xl bg-zinc-900 px-8 text-base font-medium shadow-lg shadow-zinc-900/20 transition-all duration-200 hover:bg-zinc-800 hover:shadow-xl hover:shadow-zinc-900/25">
+  <span className="flex items-center gap-2">
+    Continue
+    <ArrowRight className="h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
+  </span>
+</Button>
+```
 
 ---
 
-## 🔄 Updates
+## Updates
 
 **Last Updated:** 2025-12-28
-**Version:** 1.0
-**Based on:** lelezhang.design aesthetic
+**Version:** 2.0
+**Based on:** lelezhang.design + supernotes.app aesthetics
