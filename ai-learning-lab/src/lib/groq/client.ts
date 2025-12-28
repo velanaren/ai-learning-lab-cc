@@ -9,7 +9,7 @@ export const groq = new Groq({
 });
 
 export const MODELS = {
-  reasoning: "llama-3.1-70b-versatile", // For complex generation tasks
+  reasoning: "llama-3.3-70b-versatile", // For complex generation tasks
   fast: "llama-3.1-8b-instant", // For quick responses
 };
 
