@@ -15,14 +15,26 @@ import {
 export default async function OnboardingPage() {
   const user = await getCurrentUser();
 
-  // Check if user already has a topic (redirect to dashboard if yes)
+  // Check onboarding completion status
   const existingTopic = await prisma.topic.findFirst({
     where: { userId: user.id },
   });
 
-  if (existingTopic) {
+  const existingProfile = await prisma.userProfile.findUnique({
+    where: { userId: user.id },
+  });
+
+  // If user has completed both topic and profile, go to dashboard
+  if (existingTopic && existingProfile) {
     redirect("/dashboard/today");
   }
+
+  // If user has a topic but no profile, continue to questionnaire
+  if (existingTopic && !existingProfile) {
+    redirect("/onboarding/questionnaire");
+  }
+
+  // Otherwise, show topic selection page
 
   async function createTopic(formData: FormData) {
     "use server";
