@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/utils";
 import { dluService } from "@/lib/services/dlu-service";
+import { sanitizeAndLimit } from "@/lib/utils/sanitize";
 
 // ========================================
 // ERROR MESSAGES
@@ -32,11 +33,14 @@ export async function POST(request: Request) {
       );
     }
 
+    // Sanitize user input before storing
+    const sanitizedReflection = sanitizeAndLimit(reflectionText, 10000) || "";
+
     // Mark day as complete
     const memoryEntry = await dluService.markDayComplete(
       user.id,
       conceptId,
-      reflectionText || "",
+      sanitizedReflection,
       applicationCompleted || false
     );
 

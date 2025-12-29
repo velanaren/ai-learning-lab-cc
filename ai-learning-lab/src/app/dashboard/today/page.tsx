@@ -10,9 +10,12 @@ import {
   Lightbulb,
   ArrowRight,
   Sparkles,
+  CheckCircle,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { CodeBlock } from "@/components/ui/code-block";
 import { DayNavigation } from "@/components/learning/DayNavigation";
 import { ReflectionSection } from "@/components/learning/ReflectionSection";
 import { ApplicationSection } from "@/components/learning/ApplicationSection";
@@ -182,6 +185,28 @@ export default function TodayPage() {
   return (
     <div className="container mx-auto px-6 py-8">
       <div className="mx-auto max-w-3xl">
+        {/* Viewing Completed Day Banner */}
+        {dlu.isCompleted && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 flex items-center gap-3 rounded-2xl border border-green-200 bg-green-50 px-4 py-3"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
+              <Eye className="h-4 w-4 text-green-600" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-green-800">
+                Reviewing completed lesson
+              </p>
+              <p className="text-xs text-green-600">
+                You completed this day. Your reflections have been saved.
+              </p>
+            </div>
+            <CheckCircle className="h-5 w-5 text-green-500" />
+          </motion.div>
+        )}
+
         {/* Day Navigation */}
         <DayNavigation
           currentDay={dlu.dayIndex}
@@ -196,11 +221,21 @@ export default function TodayPage() {
           transition={{ duration: 0.5 }}
           className="mb-8"
         >
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-zinc-100 px-4 py-2">
-            <BookOpen className="h-4 w-4 text-zinc-600" />
-            <span className="text-sm font-medium text-zinc-600">
-              Today&apos;s Concept
-            </span>
+          <div className="mb-3 flex items-center gap-2">
+            <div className={`inline-flex items-center gap-2 rounded-full px-4 py-2 ${
+              dlu.isCompleted ? "bg-green-100" : "bg-zinc-100"
+            }`}>
+              {dlu.isCompleted ? (
+                <CheckCircle className="h-4 w-4 text-green-600" />
+              ) : (
+                <BookOpen className="h-4 w-4 text-zinc-600" />
+              )}
+              <span className={`text-sm font-medium ${
+                dlu.isCompleted ? "text-green-700" : "text-zinc-600"
+              }`}>
+                {dlu.isCompleted ? "Completed" : "Today's Concept"}
+              </span>
+            </div>
           </div>
           <h1 className="text-3xl font-medium tracking-tight text-zinc-900 sm:text-4xl">
             {dlu.conceptName}
@@ -266,9 +301,9 @@ export default function TodayPage() {
           </p>
 
           {/* Code Block */}
-          <pre className="mb-6 overflow-x-auto rounded-xl bg-zinc-900 p-4 text-sm text-zinc-100">
-            <code>{dlu.content.concreteExample.code}</code>
-          </pre>
+          <div className="mb-6">
+            <CodeBlock code={dlu.content.concreteExample.code} />
+          </div>
 
           {/* Step by Step */}
           <div>
@@ -294,6 +329,7 @@ export default function TodayPage() {
         {/* Reflection Section */}
         <ReflectionSection
           prompts={dlu.content.reflectionPrompts}
+          conceptId={dlu.conceptId}
           onAnswersChange={handleAnswersChange}
           disabled={dlu.isCompleted}
         />
@@ -302,6 +338,7 @@ export default function TodayPage() {
         {dlu.content.applicationMoment && (
           <ApplicationSection
             task={dlu.content.applicationMoment as DLUApplicationMoment}
+            conceptId={dlu.conceptId}
             onCompletedChange={setApplicationCompleted}
             disabled={dlu.isCompleted}
           />

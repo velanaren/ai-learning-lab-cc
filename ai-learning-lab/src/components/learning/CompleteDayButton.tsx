@@ -48,9 +48,9 @@ export function CompleteDayButton({
 
       const data = await response.json();
 
-      // Clear localStorage
-      localStorage.removeItem("reflection-answers");
-      localStorage.removeItem("app-completed");
+      // Clear localStorage for this concept
+      localStorage.removeItem(`reflection-answers-${conceptId}`);
+      localStorage.removeItem(`app-completed-${conceptId}`);
 
       setCompleted(true);
 

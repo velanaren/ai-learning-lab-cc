@@ -8,20 +8,23 @@ import { Label } from "@/components/ui/label";
 
 interface ReflectionSectionProps {
   prompts: string[];
+  conceptId: string;
   onAnswersChange: (answers: string[]) => void;
   disabled?: boolean;
 }
 
 export function ReflectionSection({
   prompts,
+  conceptId,
   onAnswersChange,
   disabled = false,
 }: ReflectionSectionProps) {
   const [answers, setAnswers] = useState<string[]>(Array(prompts.length).fill(""));
+  const storageKey = `reflection-answers-${conceptId}`;
 
   // Load saved answers from localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem("reflection-answers");
+    const saved = localStorage.getItem(storageKey);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -33,7 +36,7 @@ export function ReflectionSection({
         // Ignore parse errors
       }
     }
-  }, [prompts.length, onAnswersChange]);
+  }, [prompts.length, onAnswersChange, storageKey]);
 
   const handleChange = (index: number, value: string) => {
     const newAnswers = [...answers];
@@ -42,7 +45,7 @@ export function ReflectionSection({
     onAnswersChange(newAnswers);
 
     // Auto-save to localStorage
-    localStorage.setItem("reflection-answers", JSON.stringify(newAnswers));
+    localStorage.setItem(storageKey, JSON.stringify(newAnswers));
   };
 
   return (

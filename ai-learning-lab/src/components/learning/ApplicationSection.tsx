@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { ChevronDown, Zap, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { CodeBlock } from "@/components/ui/code-block";
 import {
   Collapsible,
   CollapsibleContent,
@@ -19,22 +20,25 @@ interface ApplicationMoment {
 
 interface ApplicationSectionProps {
   task: ApplicationMoment;
+  conceptId: string;
   onCompletedChange: (completed: boolean) => void;
   disabled?: boolean;
 }
 
 export function ApplicationSection({
   task,
+  conceptId,
   onCompletedChange,
   disabled = false,
 }: ApplicationSectionProps) {
   const [open, setOpen] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const storageKey = `app-completed-${conceptId}`;
 
   const handleCompletedChange = (checked: boolean) => {
     setCompleted(checked);
     onCompletedChange(checked);
-    localStorage.setItem("app-completed", checked.toString());
+    localStorage.setItem(storageKey, checked.toString());
   };
 
   return (
@@ -96,9 +100,7 @@ export function ApplicationSection({
               <h3 className="mb-2 text-sm font-medium text-blue-900">
                 Expected Output
               </h3>
-              <pre className="overflow-x-auto rounded-xl bg-zinc-900 p-4 text-sm text-zinc-100">
-                <code>{task.expectedOutput}</code>
-              </pre>
+              <CodeBlock code={task.expectedOutput} />
             </div>
 
             {/* Completion Checkbox */}
