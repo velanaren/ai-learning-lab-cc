@@ -6,9 +6,11 @@ import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
 
 export const MODELS = {
   // Primary model for all content generation
-  primary: "gemini-2.0-flash-exp",
-  // Fallback if needed
-  fallback: "gemini-1.5-flash",
+  primary: "gemini-2.5-flash-lite",
+  // Alternative models
+  flash25: "gemini-2.5-flash",
+  flash2: "gemini-2.0-flash-lite",
+  pro: "gemini-2.5-pro",
 };
 
 // Lazy initialization of the Gemini client
