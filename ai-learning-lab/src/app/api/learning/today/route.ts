@@ -92,7 +92,7 @@ export async function GET(request: Request) {
     }
 
     // Handle JSON parse errors (AI returned malformed response)
-    if (error instanceof Error && error.message.includes("Failed to parse Groq response")) {
+    if (error instanceof Error && error.message.includes("Failed to parse")) {
       return NextResponse.json(
         { error: "The AI generated an incomplete response. Please refresh to try again." },
         { status: 500 }

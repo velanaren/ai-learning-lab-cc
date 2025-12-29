@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { CheckCircle, ArrowRight, Loader2, PartyPopper } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EvidenceCaptureModal } from "@/components/memory/EvidenceCaptureModal";
 
 interface CompleteDayButtonProps {
   conceptId: string;
@@ -25,6 +26,9 @@ export function CompleteDayButton({
   const [isLoading, setIsLoading] = useState(false);
   const [completed, setCompleted] = useState(isAlreadyCompleted);
   const [error, setError] = useState<string | null>(null);
+  const [showEvidenceModal, setShowEvidenceModal] = useState(false);
+  const [memoryEntryId, setMemoryEntryId] = useState<string | null>(null);
+  const [isLearningComplete, setIsLearningComplete] = useState(false);
 
   const handleComplete = async () => {
     setIsLoading(true);
@@ -52,19 +56,28 @@ export function CompleteDayButton({
       localStorage.removeItem(`reflection-answers-${conceptId}`);
       localStorage.removeItem(`app-completed-${conceptId}`);
 
-      setCompleted(true);
+      // Store completion info
+      setMemoryEntryId(data.memoryEntryId);
+      setIsLearningComplete(data.isLearningComplete);
 
-      // Show celebration briefly, then navigate
-      if (data.isLearningComplete) {
-        // Learning journey complete!
-        setTimeout(() => {
-          router.push("/dashboard/memory");
-        }, 2000);
-      }
+      // Show evidence capture modal (user can skip)
+      setShowEvidenceModal(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleEvidenceComplete = () => {
+    setCompleted(true);
+    setShowEvidenceModal(false);
+
+    // If learning is complete, navigate to memory after brief delay
+    if (isLearningComplete) {
+      setTimeout(() => {
+        router.push("/dashboard/memory");
+      }, 2000);
     }
   };
 
@@ -174,6 +187,16 @@ export function CompleteDayButton({
           </span>
         )}
       </Button>
+
+      {/* Evidence Capture Modal */}
+      {memoryEntryId && (
+        <EvidenceCaptureModal
+          memoryEntryId={memoryEntryId}
+          open={showEvidenceModal}
+          onOpenChange={setShowEvidenceModal}
+          onComplete={handleEvidenceComplete}
+        />
+      )}
     </motion.div>
   );
 }

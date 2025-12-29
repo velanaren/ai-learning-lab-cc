@@ -38,7 +38,7 @@ export function DayNavigation({
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="mb-8 rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-lg shadow-zinc-200/30"
+      className="mb-8 rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-xl shadow-zinc-200/30"
     >
       <div className="flex items-center justify-between">
         {/* Previous Button */}

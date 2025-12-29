@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown, Zap, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,24 @@ interface ApplicationSectionProps {
   disabled?: boolean;
 }
 
+// Safe localStorage helper with error handling
+const safeLocalStorage = {
+  getItem: (key: string): string | null => {
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  },
+  setItem: (key: string, value: string): void => {
+    try {
+      localStorage.setItem(key, value);
+    } catch {
+      // Ignore errors (quota exceeded, etc.)
+    }
+  },
+};
+
 export function ApplicationSection({
   task,
   conceptId,
@@ -35,10 +53,20 @@ export function ApplicationSection({
   const [completed, setCompleted] = useState(false);
   const storageKey = `app-completed-${conceptId}`;
 
+  // Load saved completion state on mount
+  useEffect(() => {
+    const saved = safeLocalStorage.getItem(storageKey);
+    if (saved === "true") {
+      setCompleted(true);
+      onCompletedChange(true);
+      setOpen(true); // Expand if previously completed
+    }
+  }, [storageKey, onCompletedChange]);
+
   const handleCompletedChange = (checked: boolean) => {
     setCompleted(checked);
     onCompletedChange(checked);
-    localStorage.setItem(storageKey, checked.toString());
+    safeLocalStorage.setItem(storageKey, checked.toString());
   };
 
   return (
@@ -46,7 +74,7 @@ export function ApplicationSection({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.4 }}
-      className="rounded-3xl border border-blue-200 bg-gradient-to-br from-blue-50 to-white p-6 shadow-xl shadow-blue-100/30 sm:p-8"
+      className="mb-6 rounded-3xl border border-blue-200 bg-gradient-to-br from-blue-50 to-white p-6 shadow-xl shadow-blue-100/30 sm:p-8"
     >
       <Collapsible open={open} onOpenChange={setOpen}>
         <CollapsibleTrigger asChild>
@@ -67,11 +95,19 @@ export function ApplicationSection({
                 </p>
               </div>
             </div>
-            <ChevronDown
-              className={`h-5 w-5 text-blue-600 transition-transform duration-200 ${
-                open ? "rotate-180" : ""
-              }`}
-            />
+            <div className="flex items-center gap-2">
+              {completed && (
+                <span className="flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
+                  <CheckCircle2 className="h-3 w-3" />
+                  Done
+                </span>
+              )}
+              <ChevronDown
+                className={`h-5 w-5 text-blue-600 transition-transform duration-200 ${
+                  open ? "rotate-180" : ""
+                }`}
+              />
+            </div>
           </Button>
         </CollapsibleTrigger>
 
