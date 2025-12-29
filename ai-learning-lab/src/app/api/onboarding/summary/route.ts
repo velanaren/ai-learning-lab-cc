@@ -1,8 +1,22 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/utils";
 import { prisma } from "@/lib/db/prisma";
-import { groq, MODELS, callGroqWithRetry } from "@/lib/groq/client";
+import { groq, MODELS, callGroqWithRetry, TimeoutError } from "@/lib/groq/client";
 import { createLearningContractPrompt } from "@/lib/groq/prompts";
+
+// ========================================
+// ERROR MESSAGES
+// ========================================
+
+const ERROR_MESSAGES = {
+  NOT_AUTHENTICATED: "Please sign in to continue.",
+  PROFILE_NOT_FOUND: "Your profile wasn't found. Please complete the questionnaire first.",
+  TOPIC_NOT_FOUND: "No topic selected. Please choose a topic to learn.",
+  AI_TIMEOUT: "The AI is taking longer than expected. Please try again in a moment.",
+  AI_OVERLOADED: "Our AI service is currently busy. Please wait a moment and try again.",
+  GENERATION_FAILED: "We couldn't generate your learning summary. Please try again.",
+  UNKNOWN_ERROR: "Something unexpected happened. Please try again.",
+};
 
 export async function POST() {
   try {
@@ -15,7 +29,7 @@ export async function POST() {
 
     if (!profile) {
       return NextResponse.json(
-        { error: "Profile not found. Complete questionnaire first." },
+        { error: ERROR_MESSAGES.PROFILE_NOT_FOUND },
         { status: 404 }
       );
     }
@@ -27,22 +41,32 @@ export async function POST() {
     });
 
     if (!topic) {
-      return NextResponse.json({ error: "Topic not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: ERROR_MESSAGES.TOPIC_NOT_FOUND },
+        { status: 404 }
+      );
     }
 
     // Generate learning contract using Groq
     const prompt = createLearningContractPrompt(profile, topic.name);
 
-    const summary = await callGroqWithRetry(async () => {
-      const completion = await groq.chat.completions.create({
-        model: MODELS.reasoning,
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.7,
-        max_tokens: 1500,
-      });
+    const summary = await callGroqWithRetry(
+      async () => {
+        const completion = await groq.chat.completions.create({
+          model: MODELS.reasoning,
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.7,
+          max_tokens: 1500,
+        });
 
-      return completion.choices[0]?.message?.content || "";
-    });
+        return completion.choices[0]?.message?.content || "";
+      },
+      {
+        timeoutMs: 45000, // 45 seconds for summary generation
+        operationName: "Learning Contract summary generation",
+        maxRetries: 2,
+      }
+    );
 
     return NextResponse.json({ summary, topic: topic.name });
   } catch (error: unknown) {
@@ -50,12 +74,33 @@ export async function POST() {
 
     // Handle authentication errors
     if (error instanceof Error && error.message === "Not authenticated") {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      return NextResponse.json(
+        { error: ERROR_MESSAGES.NOT_AUTHENTICATED },
+        { status: 401 }
+      );
     }
 
-    // Handle other errors
-    const errorMessage =
-      error instanceof Error ? error.message : "Failed to generate summary";
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    // Handle timeout errors
+    if (error instanceof TimeoutError) {
+      return NextResponse.json(
+        { error: ERROR_MESSAGES.AI_TIMEOUT },
+        { status: 504 }
+      );
+    }
+
+    // Handle rate limiting / overload
+    const errorWithStatus = error as { status?: number };
+    if (errorWithStatus.status === 429) {
+      return NextResponse.json(
+        { error: ERROR_MESSAGES.AI_OVERLOADED },
+        { status: 503 }
+      );
+    }
+
+    // Handle other errors with user-friendly message
+    return NextResponse.json(
+      { error: ERROR_MESSAGES.GENERATION_FAILED },
+      { status: 500 }
+    );
   }
 }
