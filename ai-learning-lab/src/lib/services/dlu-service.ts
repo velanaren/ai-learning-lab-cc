@@ -163,16 +163,16 @@ export class DLUService {
           model: MODELS.reasoning,
           messages: [{ role: "user", content: prompt }],
           temperature: 0.4,
-          max_tokens: 4000,
+          max_tokens: 6000, // Increased for complete JSON responses
         });
 
         const responseContent = completion.choices[0]?.message?.content || "";
         return this.parseDLUResponse(responseContent);
       },
       {
-        timeoutMs: 60000, // 60 seconds for DLU generation
+        timeoutMs: 120000, // 120 seconds for DLU generation (Groq can be slow)
         operationName: "DLU content generation",
-        maxRetries: 2,
+        maxRetries: 3, // Increased retries
       }
     );
 
@@ -192,10 +192,15 @@ export class DLUService {
    * Parse and validate JSON response from Groq
    */
   private parseDLUResponse(content: string): DLUContent {
-    // Try to extract JSON from the response
+    if (!content || content.trim().length === 0) {
+      throw new Error("Empty response from Groq");
+    }
+
     let jsonString = content.trim();
 
-    // Remove markdown code blocks if present
+    // Try multiple methods to extract JSON
+
+    // Method 1: Remove markdown code blocks
     if (jsonString.startsWith("```json")) {
       jsonString = jsonString.slice(7);
     } else if (jsonString.startsWith("```")) {
@@ -208,10 +213,18 @@ export class DLUService {
 
     jsonString = jsonString.trim();
 
+    // Method 2: Try to find JSON object in the response
+    if (!jsonString.startsWith("{")) {
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        jsonString = jsonMatch[0];
+      }
+    }
+
     try {
       const data = JSON.parse(jsonString) as DLUContent;
 
-      // Basic structure validation
+      // Basic structure validation with defaults for optional fields
       if (!data.conceptExplanation) {
         throw new Error("Missing conceptExplanation");
       }
@@ -220,15 +233,31 @@ export class DLUService {
         throw new Error("Missing concreteExample");
       }
 
+      // Ensure concreteExample has required fields
+      if (!data.concreteExample.description) {
+        data.concreteExample.description = "";
+      }
+      if (!data.concreteExample.code) {
+        data.concreteExample.code = "// No code example provided";
+      }
+      if (!data.concreteExample.stepByStep) {
+        data.concreteExample.stepByStep = [];
+      }
+
       if (!data.reflectionPrompts || !Array.isArray(data.reflectionPrompts)) {
-        throw new Error("Missing or invalid reflectionPrompts");
+        data.reflectionPrompts = ["What did you learn from this concept?"];
       }
 
       return data;
     } catch (error) {
-      console.error("Failed to parse DLU response:", content);
+      // Log first 500 chars of response for debugging
+      const preview = content.substring(0, 500);
+      console.error("Failed to parse DLU response. Preview:", preview);
+      console.error("Response length:", content.length);
+      console.error("Parse error:", error instanceof Error ? error.message : error);
+
       throw new Error(
-        `Failed to parse Groq response as JSON: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Failed to parse Groq response as JSON: ${error instanceof Error ? error.message : "Unknown error"}. Response length: ${content.length}`
       );
     }
   }
