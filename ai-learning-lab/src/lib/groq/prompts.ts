@@ -331,25 +331,30 @@ OUTPUT REQUIREMENTS:
 6. Next Steps (1 sentence):
    - Brief preview of what concept comes next or how this connects to the bigger picture
 
-RESPONSE FORMAT:
-Return ONLY valid JSON (no markdown, no explanation) in this exact structure:
+CRITICAL: Return ONLY valid JSON. No markdown code fences. No backticks around the response.
+
+The "code" and "expectedOutput" fields must be plain strings with \\n for newlines. Do NOT use markdown backticks inside JSON strings.
+
+RESPONSE FORMAT (valid JSON only):
 {
-  ${prefersTLDR ? '"tldrSummary": "[2 sentence summary]",' : ""}
-  "conceptExplanation": "[200-400 words, respects user preferences]",
+  ${prefersTLDR ? '"tldrSummary": "2 sentence summary here",' : ""}
+  "conceptExplanation": "200-400 words explanation here",
   "concreteExample": {
-    "description": "[Brief description of what the example shows]",
-    "code": "[Runnable code in markdown code block format]",
-    "stepByStep": ["Step 1: ...", "Step 2: ...", "Step 3: ..."]
+    "description": "Brief description of what the example shows",
+    "code": "const example = 'code';\\nconst nextLine = 'here';",
+    "stepByStep": ["Step 1: explanation", "Step 2: explanation", "Step 3: explanation"]
   },
   "reflectionPrompts": [
-    "[Question targeting common confusion 1]",
-    "[Question targeting common confusion 2]"
+    "Question targeting common confusion 1?",
+    "Question targeting common confusion 2?"
   ],
   "applicationMoment": {
-    "task": "[5-10 minute practical task]",
-    "guidance": "[Step-by-step hints]",
-    "expectedOutput": "[What success looks like]"
+    "task": "5-10 minute practical task description",
+    "guidance": "Step-by-step hints to complete the task",
+    "expectedOutput": "const result = 'expected output';\\nconsole.log(result);"
   },
-  "nextSteps": "[1 sentence preview]"
-}`;
+  "nextSteps": "1 sentence preview of what comes next"
+}
+
+Remember: All code must be a plain JSON string. Use \\n for newlines. No backticks.`;
 }

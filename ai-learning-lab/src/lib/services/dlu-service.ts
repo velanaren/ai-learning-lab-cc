@@ -221,6 +221,17 @@ export class DLUService {
       }
     }
 
+    // Method 3: Clean up common issues with code fields containing markdown
+    // Replace markdown code blocks in JSON string values with cleaned code
+    jsonString = jsonString.replace(
+      /"code"\s*:\s*```[\w]*\n?([\s\S]*?)```/g,
+      (_, code) => `"code": ${JSON.stringify(code.trim())}`
+    );
+    jsonString = jsonString.replace(
+      /"expectedOutput"\s*:\s*```[\w]*\n?([\s\S]*?)```/g,
+      (_, code) => `"expectedOutput": ${JSON.stringify(code.trim())}`
+    );
+
     try {
       const data = JSON.parse(jsonString) as DLUContent;
 
