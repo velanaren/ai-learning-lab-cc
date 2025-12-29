@@ -297,21 +297,24 @@ export default function TopicGraphPage() {
                 </div>
               </div>
             ) : (
-              <div className="space-y-8">
+              <div className="space-y-10">
                 <ConceptSection
                   title="Beginner"
                   nodes={beginnerNodes}
                   allNodes={nodes}
+                  startingDayNumber={1}
                 />
                 <ConceptSection
                   title="Intermediate"
                   nodes={intermediateNodes}
                   allNodes={nodes}
+                  startingDayNumber={beginnerNodes.length + 1}
                 />
                 <ConceptSection
                   title="Advanced"
                   nodes={advancedNodes}
                   allNodes={nodes}
+                  startingDayNumber={beginnerNodes.length + intermediateNodes.length + 1}
                 />
               </div>
             )}

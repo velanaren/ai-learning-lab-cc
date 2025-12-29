@@ -7,9 +7,11 @@ import type { UserProfile } from "@prisma/client";
 export interface ConceptNode {
   id: string;
   conceptName: string;
+  shortDescription: string; // One-liner visible in collapsed view
   prerequisites: string[];
   difficulty: "beginner" | "intermediate" | "advanced";
   whyItMatters: string;
+  learningOutcome: string; // What user will be able to DO after this concept
   commonConfusions: string[];
   exampleHook: string;
   estimatedMinutes: number;
@@ -105,17 +107,22 @@ Return ONLY valid JSON (no markdown, no explanation) in this exact structure:
   "nodes": [
     {
       "id": "concept-1",
-      "conceptName": "...",
+      "conceptName": "Name of the concept",
+      "shortDescription": "One punchy sentence explaining what this concept is about (shown in collapsed view)",
       "prerequisites": [],
       "difficulty": "beginner",
-      "whyItMatters": "...",
-      "commonConfusions": ["...", "..."],
-      "exampleHook": "...",
+      "whyItMatters": "Why this concept matters in real-world usage",
+      "learningOutcome": "After this, you'll be able to [specific action/skill]",
+      "commonConfusions": ["Confusion 1", "Confusion 2"],
+      "exampleHook": "Runnable code or command example",
       "estimatedMinutes": 10
     }
-    // ... more concepts
   ]
-}`;
+}
+
+IMPORTANT for shortDescription and learningOutcome:
+- shortDescription: Make it engaging and specific. NOT "Learn about X" but "The foundation for storing data that survives container restarts"
+- learningOutcome: Start with a verb. "Create volume mounts", "Debug networking issues", "Configure multi-container setups"`;
 }
 
 // ========================================
@@ -163,7 +170,20 @@ Return ONLY valid JSON (no markdown, no explanation) with the same structure:
   "topicName": "${topicName}",
   "totalConcepts": [number],
   "estimatedTotalHours": [number],
-  "nodes": [...]
+  "nodes": [
+    {
+      "id": "concept-1",
+      "conceptName": "Name",
+      "shortDescription": "One punchy sentence (shown in collapsed view)",
+      "prerequisites": [],
+      "difficulty": "beginner",
+      "whyItMatters": "Why this matters",
+      "learningOutcome": "After this, you'll be able to [action]",
+      "commonConfusions": ["..."],
+      "exampleHook": "code example",
+      "estimatedMinutes": 10
+    }
+  ]
 }`;
 }
 
