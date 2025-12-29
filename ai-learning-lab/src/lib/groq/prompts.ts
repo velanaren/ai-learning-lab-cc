@@ -274,62 +274,78 @@ export function createDLUContentPrompt(
       : "concise and practical";
 
   const formatPreferences = profile.preferredFormats.join(", ") || "text-first";
+  const wantsAnalogies = profile.understandingHelpers.includes("analogies");
+  const wantsVisualDiagrams = profile.understandingHelpers.includes("visual diagrams");
 
-  return `You are creating a Daily Learning Unit for the concept: "${conceptNode.conceptName}" in ${topicName}.
+  return `You are an exceptional teacher creating a Daily Learning Unit for: "${conceptNode.conceptName}" in ${topicName}.
 
+TEACHING PHILOSOPHY:
+You are NOT writing documentation. You are teaching a human who wants to truly UNDERSTAND this concept.
+- Write like a friendly expert mentor explaining to a colleague over coffee
+- Make it ENGAGING and MEMORABLE, not dry and technical
+- Use conversational language ("Think of it like...", "Here's the key insight...", "The magic happens when...")
+- Every paragraph should make the reader think "Aha, now I get it!"
+
+${wantsAnalogies ? `CRITICAL - USER WANTS ANALOGIES:
+This user specifically requested analogies to help them understand. You MUST:
+- Start the explanation with a vivid, relatable real-world analogy
+- The analogy should be the FOUNDATION of your explanation, not an afterthought
+- Example: For Docker Volumes, compare to "a USB drive that survives even when you throw away the computer"
+- Example: For API rate limiting, compare to "a bouncer at a club who only lets in 100 people per hour"
+- The analogy should make the concept click INSTANTLY
+- Reference back to the analogy when explaining technical details
+` : ""}
+${wantsVisualDiagrams ? `USER WANTS VISUAL AIDS:
+Include ASCII diagrams or visual representations where helpful to illustrate the concept.
+` : ""}
 USER LEARNING PREFERENCES:
 - Content Order: ${profile.contentOrder || "details → summary"}
 - Format Preference: ${formatPreferences}
-- Depth Philosophy: ${depthPreference}
+- Depth: ${depthPreference}
 - Understanding Helpers: ${profile.understandingHelpers.join(", ") || "step-by-step"}
-- Session Style: ${profile.sessionStyle || "one concept per day"}
 - Daily Time Budget: ${profile.dailyMinutes || 20} minutes
 
-CONCEPT DETAILS:
-- Concept Name: ${conceptNode.conceptName}
+CONCEPT TO TEACH:
+- Name: ${conceptNode.conceptName}
 - Why It Matters: ${conceptNode.whyItMatters}
-- Common Confusions: ${conceptNode.commonConfusions.join("; ")}
-- Difficulty Level: ${conceptNode.difficulty}
-- Example Hook: ${conceptNode.exampleHook}
+- Hook/Entry Point: ${conceptNode.exampleHook}
+- Common Confusions to Address: ${conceptNode.commonConfusions.join("; ")}
+- Difficulty: ${conceptNode.difficulty}
 
-PREREQUISITES ALREADY COVERED:
+PREREQUISITES COVERED:
 ${prerequisitesCovered.length > 0 ? prerequisitesCovered.join(", ") : "None yet (this is an entry-level concept)"}
-
-GENERATION TASK:
-Create a complete Daily Learning Unit that respects the user's preferences and teaches this concept effectively.
 
 OUTPUT REQUIREMENTS:
 
-1. ${prefersTLDR ? "TL;DR Summary (REQUIRED - user prefers TL;DR first)" : "TL;DR Summary (optional)"}:
-   ${prefersTLDR ? "Start with a 2-sentence summary before the detailed explanation." : "Skip or add at the end."}
+1. ${prefersTLDR ? "TL;DR Summary (REQUIRED)" : "TL;DR Summary (optional)"}:
+   ${prefersTLDR ? "2 punchy sentences that capture the essence. Make it memorable." : "Skip or add at the end."}
 
-2. Concept Explanation (200-400 words):
-   - Explain "${conceptNode.conceptName}" clearly and concretely
-   - Reference why it matters: ${conceptNode.whyItMatters}
-   - Address common confusions: ${conceptNode.commonConfusions.join("; ")}
-   ${prefersTextOnly ? "- Use text and ASCII diagrams only (NO video links)" : ""}
-   ${profile.understandingHelpers.includes("analogies") ? "- Include a helpful real-world analogy" : ""}
-   - Keep it ${depthPreference}
+2. Concept Explanation (250-400 words):
+   ${wantsAnalogies ? "- MUST START with a compelling analogy that makes the concept click" : ""}
+   - Explain "${conceptNode.conceptName}" in a way that creates genuine understanding
+   - Address the common confusions: ${conceptNode.commonConfusions.join("; ")}
+   - Include the "why" - not just what it is, but why it exists and when you'd use it
+   ${prefersTextOnly ? "- Text and ASCII diagrams only (no video links)" : ""}
+   - Be ${depthPreference} but never boring
 
 3. Concrete Example:
-   - Provide RUNNABLE code (not pseudocode)
-   - Keep under 20 lines
-   - Include step-by-step explanation of what each part does
-   ${prefersStepByStep ? "- Be extra detailed in the step-by-step breakdown" : ""}
+   - RUNNABLE code that demonstrates the concept in action
+   - Keep under 20 lines but make it meaningful
+   - Step-by-step breakdown explaining what each part does and WHY
+   ${prefersStepByStep ? "- Extra detailed breakdown since user prefers step-by-step" : ""}
 
 4. Reflection Prompts (exactly 2):
-   - Target the common confusions for this concept
-   - Make them thought-provoking but quick to answer (1-2 sentences each)
-   - Example format: "How would you explain [concept] to a teammate?"
+   - Questions that make the learner THINK, not just recall
+   - Target the common confusions
+   - Example: "If someone asked you 'why not just use X instead?', what would you say?"
 
-5. Application Moment (5-10 minute task):
-   - Provide a small, practical task the user can try
-   - Include clear guidance/hints
-   - Describe what success looks like (expected output)
-   - Task should be completable in 5-10 minutes
+5. Application Moment (5-10 minute hands-on task):
+   - A practical mini-project they can actually try
+   - Clear guidance and hints
+   - Specific expected output so they know they succeeded
 
 6. Next Steps (1 sentence):
-   - Brief preview of what concept comes next or how this connects to the bigger picture
+   - Exciting preview of what's coming next
 
 CRITICAL: Return ONLY valid JSON. No markdown code fences. No backticks around the response.
 
