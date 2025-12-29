@@ -3,10 +3,139 @@
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import ReactMarkdown from "react-markdown";
-import { Check, Pencil, Sparkles, ArrowRight, AlertCircle } from "lucide-react";
+import {
+  User,
+  Target,
+  Route,
+  Settings,
+  Sparkles,
+  XCircle,
+  ArrowRight,
+  Pencil,
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  BookOpen,
+  Lightbulb,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { confirmAndContinue } from "./actions";
+
+interface SectionData {
+  title: string;
+  content: string[];
+  icon: React.ReactNode;
+  color: string;
+}
+
+function parseSummaryToSections(markdown: string): SectionData[] {
+  const sections: SectionData[] = [];
+
+  // Split by ## headers
+  const parts = markdown.split(/^## /m).filter(Boolean);
+
+  const iconMap: Record<string, { icon: React.ReactNode; color: string }> = {
+    "Who You Are": {
+      icon: <User className="h-5 w-5" />,
+      color: "bg-blue-100 text-blue-600 border-blue-200"
+    },
+    "What You Want to Achieve": {
+      icon: <Target className="h-5 w-5" />,
+      color: "bg-emerald-100 text-emerald-600 border-emerald-200"
+    },
+    "How We'll Design Your Learning Path": {
+      icon: <Route className="h-5 w-5" />,
+      color: "bg-violet-100 text-violet-600 border-violet-200"
+    },
+    "Learning Comfort Defaults": {
+      icon: <Settings className="h-5 w-5" />,
+      color: "bg-amber-100 text-amber-600 border-amber-200"
+    },
+    "What We'll Emphasize": {
+      icon: <Sparkles className="h-5 w-5" />,
+      color: "bg-emerald-100 text-emerald-600 border-emerald-200"
+    },
+    "What We'll Skip or Minimize": {
+      icon: <XCircle className="h-5 w-5" />,
+      color: "bg-zinc-100 text-zinc-600 border-zinc-200"
+    },
+  };
+
+  for (const part of parts) {
+    const lines = part.trim().split("\n");
+    const title = lines[0].trim();
+    const contentLines = lines.slice(1).filter(line => line.trim());
+
+    // Parse content - handle both bullet points and paragraphs
+    const content: string[] = [];
+    for (const line of contentLines) {
+      const cleaned = line.replace(/^[-*]\s*/, "").trim();
+      if (cleaned) {
+        content.push(cleaned);
+      }
+    }
+
+    const iconConfig = iconMap[title] || {
+      icon: <BookOpen className="h-5 w-5" />,
+      color: "bg-zinc-100 text-zinc-600 border-zinc-200"
+    };
+
+    sections.push({
+      title,
+      content,
+      icon: iconConfig.icon,
+      color: iconConfig.color,
+    });
+  }
+
+  return sections;
+}
+
+function SectionCard({ section, index }: { section: SectionData; index: number }) {
+  const isBulletList = section.content.length > 1 &&
+    (section.title.includes("Design") ||
+     section.title.includes("Comfort") ||
+     section.title.includes("Emphasize") ||
+     section.title.includes("Skip"));
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: index * 0.1 }}
+      className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm hover:shadow-md transition-shadow duration-200"
+    >
+      <div className="flex items-start gap-4">
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${section.color}`}>
+          {section.icon}
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-base font-semibold text-zinc-900 mb-2">
+            {section.title}
+          </h3>
+          {isBulletList ? (
+            <ul className="space-y-2">
+              {section.content.map((item, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-zinc-600">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="space-y-2">
+              {section.content.map((paragraph, i) => (
+                <p key={i} className="text-sm leading-relaxed text-zinc-600">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
 
 export default function SummaryPage() {
   const router = useRouter();
@@ -58,6 +187,8 @@ export default function SummaryPage() {
   const handleEdit = () => {
     router.push("/onboarding/questionnaire");
   };
+
+  const sections = parseSummaryToSections(summary);
 
   if (error) {
     return (
@@ -119,52 +250,79 @@ export default function SummaryPage() {
               ) : (
                 <>
                   Your <span className="text-zinc-600">{topicName}</span>{" "}
-                  learning path
+                  Journey
                 </>
               )}
             </h1>
             <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-zinc-500">
               {isLoading
                 ? "We're analyzing your preferences to design the perfect learning experience."
-                : "Review the summary below. This is how we'll tailor your learning experience."}
+                : "Here's how we understood your needs. Review and confirm to continue."}
             </p>
           </motion.div>
 
-          {/* Summary Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-xl shadow-zinc-200/30 sm:p-8"
-          >
-            {isLoading ? (
-              <div className="space-y-8">
-                {/* Skeleton loading state */}
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="space-y-3">
-                    <div className="h-6 w-48 animate-pulse rounded-lg bg-zinc-100" />
-                    <div className="space-y-2">
-                      <div className="h-4 w-full animate-pulse rounded-lg bg-zinc-100" />
-                      <div
-                        className="h-4 animate-pulse rounded-lg bg-zinc-100"
-                        style={{ width: `${85 - i * 10}%` }}
-                      />
+          {/* Summary Sections */}
+          {isLoading ? (
+            <div className="space-y-4">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: i * 0.1 }}
+                  className="rounded-2xl border border-zinc-200/80 bg-white p-5"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="h-10 w-10 animate-pulse rounded-xl bg-zinc-100" />
+                    <div className="flex-1 space-y-3">
+                      <div className="h-5 w-48 animate-pulse rounded-lg bg-zinc-100" />
+                      <div className="space-y-2">
+                        <div className="h-4 w-full animate-pulse rounded-lg bg-zinc-100" />
+                        <div className="h-4 w-3/4 animate-pulse rounded-lg bg-zinc-100" />
+                      </div>
                     </div>
                   </div>
-                ))}
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {sections.map((section, index) => (
+                <SectionCard key={section.title} section={section} index={index} />
+              ))}
+            </div>
+          )}
+
+          {/* Confirmation Card */}
+          {!isLoading && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.6 }}
+              className="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-5"
+            >
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100">
+                  <Lightbulb className="h-5 w-5 text-emerald-600" />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-emerald-900">
+                    Ready to start learning?
+                  </h3>
+                  <p className="mt-1 text-sm text-emerald-700">
+                    If this looks right, confirm to generate your personalized learning path.
+                    You can always adjust your preferences later.
+                  </p>
+                </div>
               </div>
-            ) : (
-              <div className="prose prose-zinc max-w-none prose-headings:font-medium prose-headings:tracking-tight prose-headings:text-zinc-900 prose-h2:mb-4 prose-h2:mt-8 prose-h2:text-xl prose-p:leading-relaxed prose-p:text-zinc-600 prose-li:text-zinc-600 prose-strong:text-zinc-900 prose-ul:my-3 first:prose-h2:mt-0">
-                <ReactMarkdown>{summary}</ReactMarkdown>
-              </div>
-            )}
-          </motion.div>
+            </motion.div>
+          )}
 
           {/* Action Buttons */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={{ duration: 0.5, delay: 0.7 }}
             className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center"
           >
             <Button
@@ -196,11 +354,11 @@ export default function SummaryPage() {
                     }}
                     className="h-5 w-5 rounded-full border-2 border-white/30 border-t-white"
                   />
-                  Creating your plan...
+                  Creating your path...
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
-                  Confirm & Continue
+                  Confirm & Generate Path
                   <ArrowRight className="h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
                 </span>
               )}
@@ -220,11 +378,11 @@ export default function SummaryPage() {
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+            transition={{ duration: 0.5, delay: 0.8 }}
             className="mt-6 text-center text-sm text-zinc-400"
           >
-            Review the summary above. If it doesn&apos;t reflect your
-            preferences, you can go back and update your answers.
+            Review the summary above. If something doesn&apos;t look right,
+            go back and update your answers.
           </motion.p>
         </div>
       </div>
