@@ -226,3 +226,130 @@ Generate a learning contract summary in this exact format:
 
 Keep the tone warm, clear, and actionable. Use "we" language (collaborative). Make it feel like a thoughtful teacher who listened carefully. Be specific to ${topicName} where relevant.`;
 }
+
+// ========================================
+// DLU (DAILY LEARNING UNIT) TYPES
+// ========================================
+
+export interface DLUConcreteExample {
+  description: string;
+  code: string;
+  stepByStep: string[];
+}
+
+export interface DLUApplicationMoment {
+  task: string;
+  guidance: string;
+  expectedOutput: string;
+}
+
+export interface DLUContent {
+  tldrSummary?: string;
+  conceptExplanation: string;
+  concreteExample: DLUConcreteExample;
+  reflectionPrompts: string[];
+  applicationMoment: DLUApplicationMoment | null;
+  nextSteps: string;
+}
+
+// ========================================
+// DLU CONTENT GENERATION PROMPT
+// ========================================
+
+export function createDLUContentPrompt(
+  conceptNode: ConceptNode,
+  profile: UserProfile,
+  prerequisitesCovered: string[],
+  topicName: string
+): string {
+  // Determine user preferences
+  const prefersTLDR = profile.contentOrder === "TL;DR → details";
+  const prefersTextOnly =
+    profile.audioVideoPreference === "avoid audio-video" ||
+    profile.preferredFormats.includes("text-first");
+  const prefersStepByStep = profile.preferredFormats.includes("step-by-step labs");
+  const depthPreference =
+    profile.depthPhilosophy === "never compromise on accuracy and depth"
+      ? "comprehensive"
+      : "concise and practical";
+
+  const formatPreferences = profile.preferredFormats.join(", ") || "text-first";
+
+  return `You are creating a Daily Learning Unit for the concept: "${conceptNode.conceptName}" in ${topicName}.
+
+USER LEARNING PREFERENCES:
+- Content Order: ${profile.contentOrder || "details → summary"}
+- Format Preference: ${formatPreferences}
+- Depth Philosophy: ${depthPreference}
+- Understanding Helpers: ${profile.understandingHelpers.join(", ") || "step-by-step"}
+- Session Style: ${profile.sessionStyle || "one concept per day"}
+- Daily Time Budget: ${profile.dailyMinutes || 20} minutes
+
+CONCEPT DETAILS:
+- Concept Name: ${conceptNode.conceptName}
+- Why It Matters: ${conceptNode.whyItMatters}
+- Common Confusions: ${conceptNode.commonConfusions.join("; ")}
+- Difficulty Level: ${conceptNode.difficulty}
+- Example Hook: ${conceptNode.exampleHook}
+
+PREREQUISITES ALREADY COVERED:
+${prerequisitesCovered.length > 0 ? prerequisitesCovered.join(", ") : "None yet (this is an entry-level concept)"}
+
+GENERATION TASK:
+Create a complete Daily Learning Unit that respects the user's preferences and teaches this concept effectively.
+
+OUTPUT REQUIREMENTS:
+
+1. ${prefersTLDR ? "TL;DR Summary (REQUIRED - user prefers TL;DR first)" : "TL;DR Summary (optional)"}:
+   ${prefersTLDR ? "Start with a 2-sentence summary before the detailed explanation." : "Skip or add at the end."}
+
+2. Concept Explanation (200-400 words):
+   - Explain "${conceptNode.conceptName}" clearly and concretely
+   - Reference why it matters: ${conceptNode.whyItMatters}
+   - Address common confusions: ${conceptNode.commonConfusions.join("; ")}
+   ${prefersTextOnly ? "- Use text and ASCII diagrams only (NO video links)" : ""}
+   ${profile.understandingHelpers.includes("analogies") ? "- Include a helpful real-world analogy" : ""}
+   - Keep it ${depthPreference}
+
+3. Concrete Example:
+   - Provide RUNNABLE code (not pseudocode)
+   - Keep under 20 lines
+   - Include step-by-step explanation of what each part does
+   ${prefersStepByStep ? "- Be extra detailed in the step-by-step breakdown" : ""}
+
+4. Reflection Prompts (exactly 2):
+   - Target the common confusions for this concept
+   - Make them thought-provoking but quick to answer (1-2 sentences each)
+   - Example format: "How would you explain [concept] to a teammate?"
+
+5. Application Moment (5-10 minute task):
+   - Provide a small, practical task the user can try
+   - Include clear guidance/hints
+   - Describe what success looks like (expected output)
+   - Task should be completable in 5-10 minutes
+
+6. Next Steps (1 sentence):
+   - Brief preview of what concept comes next or how this connects to the bigger picture
+
+RESPONSE FORMAT:
+Return ONLY valid JSON (no markdown, no explanation) in this exact structure:
+{
+  ${prefersTLDR ? '"tldrSummary": "[2 sentence summary]",' : ""}
+  "conceptExplanation": "[200-400 words, respects user preferences]",
+  "concreteExample": {
+    "description": "[Brief description of what the example shows]",
+    "code": "[Runnable code in markdown code block format]",
+    "stepByStep": ["Step 1: ...", "Step 2: ...", "Step 3: ..."]
+  },
+  "reflectionPrompts": [
+    "[Question targeting common confusion 1]",
+    "[Question targeting common confusion 2]"
+  ],
+  "applicationMoment": {
+    "task": "[5-10 minute practical task]",
+    "guidance": "[Step-by-step hints]",
+    "expectedOutput": "[What success looks like]"
+  },
+  "nextSteps": "[1 sentence preview]"
+}`;
+}
