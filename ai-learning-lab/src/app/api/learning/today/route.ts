@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/utils";
 import { dluService } from "@/lib/services/dlu-service";
-import { TimeoutError } from "@/lib/groq/client";
+import { TimeoutError } from "@/lib/gemini/client";
 
 // ========================================
 // ERROR MESSAGES

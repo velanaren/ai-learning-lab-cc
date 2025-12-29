@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/utils";
 import { prisma } from "@/lib/db/prisma";
-import { classifyTopicWithFallback } from "@/lib/groq/classify-topic";
+import { classifyTopicWithFallback } from "@/lib/gemini/classify-topic";
 
 export async function createTopic(topicName: string) {
   // Input validation and sanitization

@@ -20,7 +20,7 @@ import { DayNavigation } from "@/components/learning/DayNavigation";
 import { ReflectionSection } from "@/components/learning/ReflectionSection";
 import { ApplicationSection } from "@/components/learning/ApplicationSection";
 import { CompleteDayButton } from "@/components/learning/CompleteDayButton";
-import type { DLUContent, DLUApplicationMoment } from "@/lib/groq/prompts";
+import type { DLUContent, DLUApplicationMoment } from "@/lib/gemini/prompts";
 
 interface DLUData {
   isComplete: boolean;
@@ -242,20 +242,43 @@ export default function TodayPage() {
           </h1>
         </motion.div>
 
-        {/* TL;DR Summary (if present) */}
-        {dlu.content.tldrSummary && (
+        {/* Hook - Curiosity Gap */}
+        {dlu.content.hook && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <Alert className="mb-6 rounded-2xl border-amber-200 bg-amber-50">
-              <Lightbulb className="h-5 w-5 text-amber-600" />
-              <AlertTitle className="text-amber-800">TL;DR</AlertTitle>
-              <AlertDescription className="text-amber-700">
-                {dlu.content.tldrSummary}
+            <Alert className="mb-6 rounded-2xl border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50">
+              <Sparkles className="h-5 w-5 text-amber-600" />
+              <AlertDescription className="text-base font-medium text-amber-800">
+                {dlu.content.hook}
               </AlertDescription>
             </Alert>
+          </motion.div>
+        )}
+
+        {/* Mental Model - The Key Analogy */}
+        {dlu.content.mentalModel && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="mb-6 rounded-3xl border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50 p-6 shadow-lg sm:p-8"
+          >
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100">
+                <Lightbulb className="h-5 w-5 text-indigo-600" />
+              </div>
+              <h2 className="text-lg font-medium text-indigo-900">
+                The Mental Model
+              </h2>
+            </div>
+            <div className="prose prose-indigo max-w-none">
+              <p className="whitespace-pre-wrap text-base leading-relaxed text-indigo-800">
+                {dlu.content.mentalModel}
+              </p>
+            </div>
           </motion.div>
         )}
 
@@ -263,7 +286,7 @@ export default function TodayPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.15 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
           className="mb-6 rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-xl shadow-zinc-200/30 sm:p-8"
         >
           <div className="mb-4 flex items-center gap-3">
@@ -271,7 +294,7 @@ export default function TodayPage() {
               <BookOpen className="h-5 w-5 text-zinc-600" />
             </div>
             <h2 className="text-lg font-medium text-zinc-900">
-              Understanding the Concept
+              Let&apos;s Dive In
             </h2>
           </div>
           <div className="prose prose-zinc max-w-none">
@@ -285,7 +308,7 @@ export default function TodayPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+          transition={{ duration: 0.5, delay: 0.25 }}
           className="mb-6 rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-xl shadow-zinc-200/30 sm:p-8"
         >
           <div className="mb-4 flex items-center gap-3">
@@ -344,13 +367,37 @@ export default function TodayPage() {
           />
         )}
 
+        {/* Synthesis - Tie it Together */}
+        {dlu.content.synthesis && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.45 }}
+            className="mb-6 rounded-2xl border-2 border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 p-5"
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-green-100">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+              </div>
+              <div>
+                <h3 className="mb-1 text-sm font-medium text-green-800">
+                  Key Takeaway
+                </h3>
+                <p className="text-sm leading-relaxed text-green-700">
+                  {dlu.content.synthesis}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Next Steps */}
         {dlu.content.nextSteps && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.45 }}
-            className="mt-6 rounded-2xl bg-zinc-50 p-4 text-center"
+            transition={{ duration: 0.5, delay: 0.5 }}
+            className="mb-6 rounded-2xl bg-zinc-50 p-4 text-center"
           >
             <p className="text-sm text-zinc-500">
               <span className="font-medium text-zinc-700">Coming up next:</span>{" "}

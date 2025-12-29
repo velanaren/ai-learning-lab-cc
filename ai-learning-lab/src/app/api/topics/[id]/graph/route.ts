@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/utils";
 import { prisma } from "@/lib/db/prisma";
 import { topicGraphService } from "@/lib/services/topic-graph-service";
-import { TimeoutError } from "@/lib/groq/client";
+import { TimeoutError } from "@/lib/gemini/client";
 
 // ========================================
 // ERROR MESSAGES

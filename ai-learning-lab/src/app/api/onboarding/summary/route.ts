@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/utils";
 import { prisma } from "@/lib/db/prisma";
-import { groq, MODELS, callGroqWithRetry, TimeoutError } from "@/lib/groq/client";
-import { createLearningContractPrompt } from "@/lib/groq/prompts";
+import { generateContent, TimeoutError } from "@/lib/gemini/client";
+import { createLearningContractPrompt } from "@/lib/gemini/prompts";
 
 // ========================================
 // ERROR MESSAGES
@@ -47,26 +47,16 @@ export async function POST() {
       );
     }
 
-    // Generate learning contract using Groq
+    // Generate learning contract using Gemini
     const prompt = createLearningContractPrompt(profile, topic.name);
 
-    const summary = await callGroqWithRetry(
-      async () => {
-        const completion = await groq.chat.completions.create({
-          model: MODELS.reasoning,
-          messages: [{ role: "user", content: prompt }],
-          temperature: 0.7,
-          max_tokens: 1500,
-        });
-
-        return completion.choices[0]?.message?.content || "";
-      },
-      {
-        timeoutMs: 45000, // 45 seconds for summary generation
-        operationName: "Learning Contract summary generation",
-        maxRetries: 2,
-      }
-    );
+    const summary = await generateContent({
+      prompt,
+      temperature: 0.7,
+      timeoutMs: 60000, // 60 seconds for summary generation
+      operationName: "Learning Contract summary generation",
+      maxRetries: 2,
+    });
 
     return NextResponse.json({ summary, topic: topic.name });
   } catch (error: unknown) {

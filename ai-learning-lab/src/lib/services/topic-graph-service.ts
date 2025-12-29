@@ -1,11 +1,11 @@
 import { prisma } from "@/lib/db/prisma";
-import { groq, MODELS, callGroqWithRetry } from "@/lib/groq/client";
+import { generateJSON } from "@/lib/gemini/client";
 import {
   createTopicGraphPrompt,
   createTopicGraphRegenerationPrompt,
   ConceptNode,
   TopicGraphData,
-} from "@/lib/groq/prompts";
+} from "@/lib/gemini/prompts";
 
 // ========================================
 // VALIDATION TYPES
@@ -62,27 +62,16 @@ export class TopicGraphService {
       return existingDraft;
     }
 
-    // 4. Build prompt and call Groq API
+    // 4. Build prompt and call Gemini API
     const prompt = createTopicGraphPrompt(topic.name, topic.category, profile);
 
-    const graphData = await callGroqWithRetry(
-      async () => {
-        const completion = await groq.chat.completions.create({
-          model: MODELS.reasoning,
-          messages: [{ role: "user", content: prompt }],
-          temperature: 0.3,
-          max_tokens: 8000,
-        });
-
-        const content = completion.choices[0]?.message?.content || "";
-        return this.parseGraphResponse(content);
-      },
-      {
-        timeoutMs: 90000, // 90 seconds for graph generation (complex task)
-        operationName: "Topic Graph generation",
-        maxRetries: 2, // Fewer retries for long operations
-      }
-    );
+    const graphData = await generateJSON<TopicGraphData>({
+      prompt,
+      temperature: 0.4,
+      timeoutMs: 120000, // 120 seconds for graph generation
+      operationName: "Topic Graph generation",
+      maxRetries: 2,
+    });
 
     // 5. Validate graph structure
     const validation = this.validateGraphStructure(graphData.nodes);
@@ -163,25 +152,14 @@ export class TopicGraphService {
       profile
     );
 
-    // 4. Call Groq API
-    const graphData = await callGroqWithRetry(
-      async () => {
-        const completion = await groq.chat.completions.create({
-          model: MODELS.reasoning,
-          messages: [{ role: "user", content: prompt }],
-          temperature: 0.4,
-          max_tokens: 8000,
-        });
-
-        const content = completion.choices[0]?.message?.content || "";
-        return this.parseGraphResponse(content);
-      },
-      {
-        timeoutMs: 90000, // 90 seconds for regeneration
-        operationName: "Topic Graph regeneration",
-        maxRetries: 2,
-      }
-    );
+    // 4. Call Gemini API
+    const graphData = await generateJSON<TopicGraphData>({
+      prompt,
+      temperature: 0.5,
+      timeoutMs: 120000, // 120 seconds for regeneration
+      operationName: "Topic Graph regeneration",
+      maxRetries: 2,
+    });
 
     // 5. Validate
     const validation = this.validateGraphStructure(graphData.nodes);
@@ -203,43 +181,6 @@ export class TopicGraphService {
     });
 
     return newGraphVersion;
-  }
-
-  /**
-   * Parse and validate JSON response from Groq
-   */
-  private parseGraphResponse(content: string): TopicGraphData {
-    // Try to extract JSON from the response
-    let jsonString = content.trim();
-
-    // Remove markdown code blocks if present
-    if (jsonString.startsWith("```json")) {
-      jsonString = jsonString.slice(7);
-    } else if (jsonString.startsWith("```")) {
-      jsonString = jsonString.slice(3);
-    }
-
-    if (jsonString.endsWith("```")) {
-      jsonString = jsonString.slice(0, -3);
-    }
-
-    jsonString = jsonString.trim();
-
-    try {
-      const data = JSON.parse(jsonString) as TopicGraphData;
-
-      // Basic structure validation
-      if (!data.nodes || !Array.isArray(data.nodes)) {
-        throw new Error("Invalid response: missing nodes array");
-      }
-
-      return data;
-    } catch (error) {
-      console.error("Failed to parse graph response:", content);
-      throw new Error(
-        `Failed to parse Groq response as JSON: ${error instanceof Error ? error.message : "Unknown error"}`
-      );
-    }
   }
 
   /**

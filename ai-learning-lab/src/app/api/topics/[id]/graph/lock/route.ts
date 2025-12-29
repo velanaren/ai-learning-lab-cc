@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/utils";
 import { prisma } from "@/lib/db/prisma";
 import { topicGraphService } from "@/lib/services/topic-graph-service";
-import { ConceptNode } from "@/lib/groq/prompts";
+import { ConceptNode } from "@/lib/gemini/prompts";
 
 // ========================================
 // POST /api/topics/[id]/graph/lock

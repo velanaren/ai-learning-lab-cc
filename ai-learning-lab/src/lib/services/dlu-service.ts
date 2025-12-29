@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/db/prisma";
-import { groq, MODELS, callGroqWithRetry } from "@/lib/groq/client";
+import { generateJSON } from "@/lib/gemini/client";
 import {
   createDLUContentPrompt,
   DLUContent,
   ConceptNode,
-} from "@/lib/groq/prompts";
+} from "@/lib/gemini/prompts";
 
 // ========================================
 // DLU (DAILY LEARNING UNIT) TYPES
@@ -149,32 +149,25 @@ export class DLUService {
       .map((id) => allNodes.find((n) => n.id === id)?.conceptName)
       .filter(Boolean) as string[];
 
-    // 4. Build prompt and call Groq
+    // 4. Build prompt and call Gemini
     const prompt = createDLUContentPrompt(
       conceptNode,
       profile,
       prerequisitesCovered,
-      topicName
+      topicName,
+      dayIndex
     );
 
-    const content = await callGroqWithRetry(
-      async () => {
-        const completion = await groq.chat.completions.create({
-          model: MODELS.reasoning,
-          messages: [{ role: "user", content: prompt }],
-          temperature: 0.4,
-          max_tokens: 6000, // Increased for complete JSON responses
-        });
+    const rawContent = await generateJSON<Record<string, unknown>>({
+      prompt,
+      temperature: 0.6,
+      timeoutMs: 120000, // 120 seconds for DLU generation
+      operationName: "DLU content generation",
+      maxRetries: 3,
+    });
 
-        const responseContent = completion.choices[0]?.message?.content || "";
-        return this.parseDLUResponse(responseContent);
-      },
-      {
-        timeoutMs: 120000, // 120 seconds for DLU generation (Groq can be slow)
-        operationName: "DLU content generation",
-        maxRetries: 3, // Increased retries
-      }
-    );
+    // Normalize the response to match expected DLUContent structure
+    const content = this.normalizeDLUContent(rawContent);
 
     // 5. Cache the content
     await prisma.dLUCache.create({
@@ -189,88 +182,60 @@ export class DLUService {
   }
 
   /**
-   * Parse and validate JSON response from Groq
+   * Normalize the DLU response to ensure all required fields exist
    */
-  private parseDLUResponse(content: string): DLUContent {
-    if (!content || content.trim().length === 0) {
-      throw new Error("Empty response from Groq");
+  private normalizeDLUContent(raw: Record<string, unknown>): DLUContent {
+    // Handle the new structure with hook, mentalModel, synthesis
+    const content: DLUContent = {
+      hook: (raw.hook as string) || "",
+      mentalModel: (raw.mentalModel as string) || "",
+      conceptExplanation: (raw.conceptExplanation as string) || "",
+      concreteExample: {
+        description: "",
+        code: "// No code example provided",
+        stepByStep: [],
+      },
+      reflectionPrompts: [],
+      applicationMoment: null,
+      synthesis: (raw.synthesis as string) || "",
+      nextSteps: (raw.nextSteps as string) || "",
+    };
+
+    // Handle concreteExample
+    if (raw.concreteExample && typeof raw.concreteExample === "object") {
+      const example = raw.concreteExample as Record<string, unknown>;
+      content.concreteExample = {
+        description: (example.description as string) || "",
+        code: (example.code as string) || "// No code example provided",
+        stepByStep: Array.isArray(example.stepByStep)
+          ? (example.stepByStep as string[])
+          : [],
+      };
     }
 
-    let jsonString = content.trim();
-
-    // Try multiple methods to extract JSON
-
-    // Method 1: Remove markdown code blocks
-    if (jsonString.startsWith("```json")) {
-      jsonString = jsonString.slice(7);
-    } else if (jsonString.startsWith("```")) {
-      jsonString = jsonString.slice(3);
+    // Handle reflectionPrompts
+    if (Array.isArray(raw.reflectionPrompts)) {
+      content.reflectionPrompts = raw.reflectionPrompts as string[];
+    } else {
+      content.reflectionPrompts = ["What did you learn from this concept?"];
     }
 
-    if (jsonString.endsWith("```")) {
-      jsonString = jsonString.slice(0, -3);
+    // Handle applicationMoment
+    if (raw.applicationMoment && typeof raw.applicationMoment === "object") {
+      const app = raw.applicationMoment as Record<string, unknown>;
+      content.applicationMoment = {
+        task: (app.task as string) || "",
+        guidance: (app.guidance as string) || "",
+        expectedOutput: (app.expectedOutput as string) || "",
+      };
     }
 
-    jsonString = jsonString.trim();
-
-    // Method 2: Try to find JSON object in the response
-    if (!jsonString.startsWith("{")) {
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        jsonString = jsonMatch[0];
-      }
+    // Validation
+    if (!content.conceptExplanation && !content.mentalModel) {
+      throw new Error("Missing both conceptExplanation and mentalModel");
     }
 
-    // Method 3: Clean up common issues with code fields containing markdown
-    // Replace markdown code blocks in JSON string values with cleaned code
-    jsonString = jsonString.replace(
-      /"code"\s*:\s*```[\w]*\n?([\s\S]*?)```/g,
-      (_, code) => `"code": ${JSON.stringify(code.trim())}`
-    );
-    jsonString = jsonString.replace(
-      /"expectedOutput"\s*:\s*```[\w]*\n?([\s\S]*?)```/g,
-      (_, code) => `"expectedOutput": ${JSON.stringify(code.trim())}`
-    );
-
-    try {
-      const data = JSON.parse(jsonString) as DLUContent;
-
-      // Basic structure validation with defaults for optional fields
-      if (!data.conceptExplanation) {
-        throw new Error("Missing conceptExplanation");
-      }
-
-      if (!data.concreteExample) {
-        throw new Error("Missing concreteExample");
-      }
-
-      // Ensure concreteExample has required fields
-      if (!data.concreteExample.description) {
-        data.concreteExample.description = "";
-      }
-      if (!data.concreteExample.code) {
-        data.concreteExample.code = "// No code example provided";
-      }
-      if (!data.concreteExample.stepByStep) {
-        data.concreteExample.stepByStep = [];
-      }
-
-      if (!data.reflectionPrompts || !Array.isArray(data.reflectionPrompts)) {
-        data.reflectionPrompts = ["What did you learn from this concept?"];
-      }
-
-      return data;
-    } catch (error) {
-      // Log first 500 chars of response for debugging
-      const preview = content.substring(0, 500);
-      console.error("Failed to parse DLU response. Preview:", preview);
-      console.error("Response length:", content.length);
-      console.error("Parse error:", error instanceof Error ? error.message : error);
-
-      throw new Error(
-        `Failed to parse Groq response as JSON: ${error instanceof Error ? error.message : "Unknown error"}. Response length: ${content.length}`
-      );
-    }
+    return content;
   }
 
   /**

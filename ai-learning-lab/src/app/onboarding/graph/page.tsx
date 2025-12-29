@@ -15,7 +15,7 @@ import { ConceptSection } from "@/components/onboarding/ConceptSection";
 import { RegenerateButton } from "@/components/onboarding/RegenerateButton";
 import { LockGraphButton } from "@/components/onboarding/LockGraphButton";
 import { GenerationProgress } from "@/components/onboarding/GenerationProgress";
-import type { ConceptNode } from "@/lib/groq/prompts";
+import type { ConceptNode } from "@/lib/gemini/prompts";
 
 interface GraphData {
   id: string;

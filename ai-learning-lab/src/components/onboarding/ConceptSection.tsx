@@ -17,7 +17,7 @@ import {
   CheckCircle2,
   Lightbulb,
 } from "lucide-react";
-import type { ConceptNode } from "@/lib/groq/prompts";
+import type { ConceptNode } from "@/lib/gemini/prompts";
 
 interface ConceptSectionProps {
   title: "Beginner" | "Intermediate" | "Advanced";
