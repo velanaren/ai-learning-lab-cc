@@ -30,6 +30,7 @@ model User {
   memoryEntries MemoryEntry[]
   githubConn    GitHubConnection?
   dluCache      DLUCache[]
+  weeklyReviews WeeklyReview[]
 }
 
 // ========================================
@@ -281,5 +282,22 @@ model DLUCache {
   user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([conceptId, userId])
+  @@index([userId])
+}
+
+// ========================================
+// 13. WEEKLYREVIEW MODEL
+// ========================================
+// Cached weekly review with AI-generated insights and suggestions
+model WeeklyReview {
+  id             String   @id @default(cuid())
+  userId         String
+  weekStartDate  DateTime // Monday of the week
+  reviewData     Json     // Stores the complete review object
+  generatedAt    DateTime @default(now())
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekStartDate])
   @@index([userId])
 }

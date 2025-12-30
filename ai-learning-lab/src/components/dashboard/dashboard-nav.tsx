@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Calendar, Database, Settings, Menu, X } from "lucide-react";
+import { Calendar, Database, Settings, Menu, X, CalendarCheck } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -16,6 +16,11 @@ const navItems = [
     name: "Memory",
     href: "/dashboard/memory",
     icon: Database,
+  },
+  {
+    name: "Review",
+    href: "/dashboard/review",
+    icon: CalendarCheck,
   },
   {
     name: "Settings",

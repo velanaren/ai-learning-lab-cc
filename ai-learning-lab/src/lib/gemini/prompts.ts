@@ -536,3 +536,118 @@ Code in JSON must use \\n for newlines.
 
 Now teach "${conceptNode.conceptName}" like the brilliant mentor you are.`;
 }
+
+// ========================================
+// WEEKLY REVIEW TYPES
+// ========================================
+
+export interface WeekData {
+  totalDays: number;
+  completedDays: number;
+  skippedDays: number[];
+  appliedDays: number;
+  conceptsCovered: string[];
+  averageReflectionLength: number;
+  confusionSignals: string[];
+}
+
+export interface WeeklyReviewInsights {
+  pacing: string;
+  application: string;
+  engagement: string;
+}
+
+export interface AdjustmentSuggestion {
+  type: "pace_down" | "pace_up" | "more_application" | "smaller_chunks" | "none";
+  reason: string;
+  description: string;
+}
+
+export interface WeeklyReviewData {
+  progressSummary: string;
+  insights: WeeklyReviewInsights;
+  adjustmentSuggestion: AdjustmentSuggestion;
+  nextWeekPreview: string;
+  weekData: WeekData;
+}
+
+// ========================================
+// WEEKLY REVIEW GENERATION PROMPT
+// ========================================
+
+export function createWeeklyReviewPrompt(
+  weekData: WeekData,
+  topicName: string,
+  dailyMinutes: number | null
+): string {
+  const completionRate = Math.round((weekData.completedDays / weekData.totalDays) * 100);
+  const applicationRate = weekData.completedDays > 0
+    ? Math.round((weekData.appliedDays / weekData.completedDays) * 100)
+    : 0;
+
+  return `You are analyzing a learner's weekly progress in "${topicName}" and generating a personalized review.
+
+══════════════════════════════════════════════════════════════════════════════
+                              WEEK DATA
+══════════════════════════════════════════════════════════════════════════════
+
+COMPLETION:
+- Total days in week: ${weekData.totalDays}
+- Days completed: ${weekData.completedDays} (${completionRate}%)
+- Days skipped: ${weekData.skippedDays.length > 0 ? weekData.skippedDays.join(", ") : "None"}
+
+APPLICATION:
+- Days with hands-on application: ${weekData.appliedDays} (${applicationRate}% of completed days)
+
+CONCEPTS COVERED:
+${weekData.conceptsCovered.length > 0 ? weekData.conceptsCovered.map((c, i) => `${i + 1}. ${c}`).join("\n") : "No concepts completed this week"}
+
+ENGAGEMENT SIGNALS:
+- Average reflection length: ${weekData.averageReflectionLength} characters
+- Confusion signals detected: ${weekData.confusionSignals.length > 0 ? weekData.confusionSignals.join(", ") : "None"}
+
+LEARNER SETUP:
+- Daily time budget: ${dailyMinutes || 20} minutes
+
+══════════════════════════════════════════════════════════════════════════════
+                            YOUR TASK
+══════════════════════════════════════════════════════════════════════════════
+
+Generate a supportive, personalized weekly review that:
+1. Celebrates what was accomplished (be specific!)
+2. Provides honest but encouraging insights
+3. Suggests ONE adjustment if needed (or "none" if things are going well)
+4. Builds anticipation for next week
+
+TONE: Like a supportive coach reviewing game film with an athlete. Honest, specific, encouraging.
+
+ADJUSTMENT LOGIC:
+- If completion < 50%: Consider "pace_down" (fewer concepts, more digestible)
+- If completion good but application < 30%: Consider "more_application"
+- If confusion signals > 2: Consider "smaller_chunks" (break down concepts more)
+- If completion > 80% and application > 60%: Consider "pace_up" or "none"
+- Default to "none" if learner is doing well
+
+══════════════════════════════════════════════════════════════════════════════
+                            OUTPUT FORMAT
+══════════════════════════════════════════════════════════════════════════════
+
+Return ONLY valid JSON. No markdown fences.
+
+{
+  "progressSummary": "2-3 sentences on what was accomplished this week. Be specific about concepts learned. Celebrate wins!",
+  "insights": {
+    "pacing": "1-2 sentences on how the learner is keeping up with the pace. Specific observation.",
+    "application": "1-2 sentences on hands-on practice. What they're doing well or could do more.",
+    "engagement": "1-2 sentences on engagement quality based on reflection depth and signals."
+  },
+  "adjustmentSuggestion": {
+    "type": "pace_down" | "pace_up" | "more_application" | "smaller_chunks" | "none",
+    "reason": "Why this adjustment is suggested (or why no adjustment needed). Be specific.",
+    "description": "What will change if applied (e.g., 'We'll cover fewer concepts per day to give you more time to absorb each one')"
+  },
+  "nextWeekPreview": "1 exciting sentence about what's coming up next week"
+}
+
+Generate the weekly review now.`;
+}
