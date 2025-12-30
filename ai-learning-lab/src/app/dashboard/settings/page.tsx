@@ -1,6 +1,22 @@
 import Link from "next/link";
-import { Github, Sliders, ChevronRight, Sparkles, User, Bell } from "lucide-react";
+import { redirect } from "next/navigation";
+import {
+  Github,
+  Sliders,
+  ChevronRight,
+  Clock,
+  Eye,
+  Zap,
+  User,
+  Mail,
+} from "lucide-react";
 import type { Metadata } from "next";
+import { auth } from "@/lib/auth/auth";
+import { prisma } from "@/lib/db/prisma";
+import { LearningPreferencesForm } from "@/components/settings/LearningPreferencesForm";
+import { AccessibilityForm } from "@/components/settings/AccessibilityForm";
+import { ApplicationSettingsForm } from "@/components/settings/ApplicationSettingsForm";
+import { AnimatedSection } from "@/components/settings/AnimatedSection";
 
 export const metadata: Metadata = {
   title: "Settings | AI Learning Lab",
@@ -15,7 +31,13 @@ interface SettingsLinkProps {
   badge?: string;
 }
 
-function SettingsLink({ href, icon, title, description, badge }: SettingsLinkProps) {
+function SettingsLink({
+  href,
+  icon,
+  title,
+  description,
+  badge,
+}: SettingsLinkProps) {
   return (
     <Link
       href={href}
@@ -40,27 +62,77 @@ function SettingsLink({ href, icon, title, description, badge }: SettingsLinkPro
   );
 }
 
-function ComingSoonCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
+function SettingsSection({
+  icon: Icon,
+  title,
+  description,
+  children,
+}: {
+  icon: React.ElementType;
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="flex items-center gap-4 rounded-2xl border-2 border-dashed border-zinc-200 bg-zinc-50/50 p-4 opacity-60">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-zinc-100">
-        {icon}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <h3 className="font-medium text-zinc-600">{title}</h3>
-          <span className="flex items-center gap-1 rounded-full bg-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-500">
-            <Sparkles className="h-3 w-3" />
-            Soon
-          </span>
+    <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-xl shadow-zinc-200/30">
+      <div className="mb-6 flex items-start gap-4">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-zinc-100">
+          <Icon className="h-6 w-6 text-zinc-600" />
         </div>
-        <p className="mt-0.5 text-sm text-zinc-400">{description}</p>
+        <div>
+          <h2 className="text-lg font-medium text-zinc-900">{title}</h2>
+          <p className="mt-0.5 text-sm text-zinc-500">{description}</p>
+        </div>
       </div>
+      {children}
     </div>
   );
 }
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const session = await auth();
+
+  if (!session?.user?.email) {
+    redirect("/login");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    include: {
+      profile: true,
+      githubConn: true,
+    },
+  });
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const profile = user.profile;
+  const githubConnected = !!user.githubConn;
+
+  // Derive pacing preference from missedDayBehavior
+  const pacingPreference: "auto" | "ask" =
+    profile?.missedDayBehavior === "ask before adjusting" ? "ask" : "auto";
+
+  // Derive application frequency from proofOfWorkImportance
+  const applicationFrequency: "low" | "some" | "high" =
+    profile?.proofOfWorkImportance === "very important"
+      ? "high"
+      : profile?.proofOfWorkImportance === "important"
+        ? "some"
+        : "low";
+
+  // Derive tracking preference
+  const trackingPreference: "learning-only" | "with-applications" | "with-evidence" =
+    (profile?.trackingPreference as "learning-only" | "with-applications" | "with-evidence") ||
+    "learning-only";
+
+  // Derive content order
+  const contentOrder: "tldr-first" | "details-first" | "example-first" =
+    (profile?.contentOrder as "tldr-first" | "details-first" | "example-first") ||
+    "tldr-first";
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-zinc-50 via-white to-zinc-100">
       {/* Background pattern */}
@@ -80,46 +152,110 @@ export default function SettingsPage() {
               Settings
             </h1>
             <p className="mt-2 text-base leading-relaxed text-zinc-500">
-              Manage your account and learning preferences
+              Customize your learning experience
             </p>
           </div>
 
           {/* Settings Sections */}
-          <div className="space-y-4">
-            {/* Integrations Section */}
-            <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-xl shadow-zinc-200/30">
-              <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-zinc-500">
-                Integrations
-              </h2>
-              <div className="space-y-3">
-                <SettingsLink
-                  href="/settings/github"
-                  icon={<Github className="h-6 w-6 text-zinc-600" />}
-                  title="GitHub"
-                  description="Connect your GitHub account to import commits and PRs as evidence"
-                  badge="New"
+          <div className="space-y-6">
+            {/* Learning Preferences */}
+            <AnimatedSection delay={0}>
+              <SettingsSection
+                icon={Clock}
+                title="Learning Preferences"
+                description="Set your time budget and pacing preferences"
+              >
+                <LearningPreferencesForm
+                  initialDailyMinutes={profile?.dailyMinutes || 20}
+                  initialWeeklyHours={profile?.weeklyHours || 5}
+                  initialPacingPreference={pacingPreference}
                 />
-              </div>
-            </div>
+              </SettingsSection>
+            </AnimatedSection>
 
-            {/* Account Section */}
-            <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-xl shadow-zinc-200/30">
-              <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-zinc-500">
-                Account
-              </h2>
-              <div className="space-y-3">
-                <ComingSoonCard
-                  icon={<User className="h-6 w-6 text-zinc-400" />}
-                  title="Profile"
-                  description="Update your name, email, and profile picture"
+            {/* Accessibility */}
+            <AnimatedSection delay={0.1}>
+              <SettingsSection
+                icon={Eye}
+                title="Accessibility"
+                description="Customize how content is presented to you"
+              >
+                <AccessibilityForm
+                  initialPreferredFormats={profile?.preferredFormats || []}
+                  initialContentOrder={contentOrder}
+                  initialUiToggles={profile?.uiToggles || []}
                 />
-                <ComingSoonCard
-                  icon={<Bell className="h-6 w-6 text-zinc-400" />}
-                  title="Notifications"
-                  description="Configure email and push notification preferences"
+              </SettingsSection>
+            </AnimatedSection>
+
+            {/* Application Settings */}
+            <AnimatedSection delay={0.2}>
+              <SettingsSection
+                icon={Zap}
+                title="Application & Evidence"
+                description="Configure how you practice and track progress"
+              >
+                <ApplicationSettingsForm
+                  initialApplicationFrequency={applicationFrequency}
+                  initialTrackingPreference={trackingPreference}
                 />
+              </SettingsSection>
+            </AnimatedSection>
+
+            {/* Integrations */}
+            <AnimatedSection delay={0.3}>
+              <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-xl shadow-zinc-200/30">
+                <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-zinc-500">
+                  Integrations
+                </h2>
+                <div className="space-y-3">
+                  <SettingsLink
+                    href="/settings/github"
+                    icon={<Github className="h-6 w-6 text-zinc-600" />}
+                    title="GitHub"
+                    description={
+                      githubConnected
+                        ? "Connected - Manage your repositories"
+                        : "Connect to import commits and PRs as evidence"
+                    }
+                    badge={githubConnected ? "Connected" : undefined}
+                  />
+                </div>
               </div>
-            </div>
+            </AnimatedSection>
+
+            {/* Account */}
+            <AnimatedSection delay={0.4}>
+              <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-xl shadow-zinc-200/30">
+                <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-zinc-500">
+                  Account
+                </h2>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-zinc-200">
+                      <User className="h-6 w-6 text-zinc-600" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-medium text-zinc-900">
+                        {user.name || "User"}
+                      </h3>
+                      <p className="mt-0.5 text-sm text-zinc-500">
+                        Signed in with Google
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-zinc-200">
+                      <Mail className="h-6 w-6 text-zinc-600" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-medium text-zinc-900">Email</h3>
+                      <p className="mt-0.5 text-sm text-zinc-500">{user.email}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </AnimatedSection>
           </div>
         </div>
       </div>

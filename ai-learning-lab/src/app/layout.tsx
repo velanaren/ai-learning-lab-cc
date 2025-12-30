@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Instrument_Sans } from "next/font/google";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const instrumentSans = Instrument_Sans({
@@ -47,7 +48,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" style={{ viewTransitionName: "root" } as React.CSSProperties}>
-      <body className={`${instrumentSans.variable} antialiased`}>{children}</body>
+      <body className={`${instrumentSans.variable} antialiased`}>
+        {children}
+        <Toaster position="bottom-right" />
+      </body>
     </html>
   );
 }
