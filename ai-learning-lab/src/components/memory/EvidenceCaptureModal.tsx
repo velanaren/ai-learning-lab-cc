@@ -30,6 +30,7 @@ import {
   CheckCircle2,
   Camera,
 } from "lucide-react";
+import { GitHubImportModal } from "./GitHubImportModal";
 
 type EvidenceType = "link" | "code_snippet" | "screenshot" | "output";
 
@@ -156,6 +157,27 @@ export function EvidenceCaptureModal({
     exit: { x: -20, opacity: 0 },
   };
 
+  // If in GitHub mode, show the GitHub import modal instead
+  if (mode === "github") {
+    return (
+      <GitHubImportModal
+        memoryEntryId={memoryEntryId}
+        open={open}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            resetForm();
+            onOpenChange(false);
+          }
+        }}
+        onComplete={() => {
+          resetForm();
+          onComplete?.();
+        }}
+        onBack={() => setMode("choice")}
+      />
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md overflow-hidden">
@@ -198,22 +220,25 @@ export function EvidenceCaptureModal({
               transition={{ duration: 0.2 }}
               className="space-y-3 py-4"
             >
-              {/* GitHub Import - Coming Soon */}
+              {/* GitHub Import */}
               <motion.div
                 whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
                 className="w-full"
               >
                 <Button
                   variant="outline"
-                  className="w-full justify-start gap-3 h-auto py-4 rounded-2xl border-2 opacity-50 cursor-not-allowed"
-                  disabled
+                  className="w-full justify-start gap-3 h-auto py-4 rounded-2xl border-2 border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50 transition-all duration-200"
+                  onClick={() => setMode("github")}
                 >
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900">
                     <Github className="h-5 w-5 text-white" />
                   </div>
                   <div className="text-left">
                     <p className="font-medium">Import from GitHub</p>
-                    <p className="text-xs text-zinc-400">Coming soon</p>
+                    <p className="text-xs text-zinc-500">
+                      Add commits or PRs as verifiable evidence
+                    </p>
                   </div>
                 </Button>
               </motion.div>
