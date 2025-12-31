@@ -19,6 +19,11 @@
 9. [Performance](#9-performance)
 10. [User Experience Patterns](#10-user-experience-patterns)
 11. [Inclusive Design & Neurodivergent Accessibility](#11-inclusive-design--neurodivergent-accessibility)
+12. [Implementation Reference (CSS Class System)](#12-implementation-reference-css-class-system)
+13. [Logo Component Guidelines](#13-logo-component-guidelines)
+14. [Page Structure Patterns](#14-page-structure-patterns)
+15. [Component Patterns](#15-component-patterns)
+16. [Applying to Other Pages](#16-applying-to-other-pages)
 
 ---
 
@@ -1126,7 +1131,415 @@ Features support:
 
 ---
 
-**Document Version:** 1.1  
-**Last Updated:** December 31, 2025  
-**Author:** DevOps Lab Design Team  
-**Inclusive Section:** Comprehensive neurodivergent accessibility guidelines added
+---
+
+## 12. Implementation Reference (CSS Class System)
+
+This section documents the actual CSS classes implemented in `globals.css`. Use these classes for consistency across all pages.
+
+### CSS Variables (Root)
+
+```css
+:root {
+  /* Backgrounds */
+  --bg-dark: #0D0D0D;
+  --bg-elevated: #1A1A1A;
+  --bg-card: #161616;
+
+  /* Text */
+  --text-white: #FFFFFF;
+  --text-gray: #9A9A9A;
+  --text-muted: #6A6A6A;
+
+  /* Accent */
+  --accent-primary: #00D09C;
+  --accent-hover: #00FFB3;
+  --accent-glow: rgba(0, 208, 156, 0.15);
+
+  /* Spacing (8px grid) */
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-6: 48px;
+  --space-8: 64px;
+  --space-10: 80px;
+  --space-12: 96px;
+  --space-16: 128px;
+  --space-20: 160px;
+
+  /* Typography multipliers */
+  --font-size-multiplier: 1;
+  --line-height-multiplier: 1;
+  --letter-spacing-add: 0px;
+}
+```
+
+### Button Classes
+
+| Class | Usage | Appearance |
+|-------|-------|------------|
+| `.btn-primary` | Main CTA buttons | White bg, dark text, bold |
+| `.btn-accent` | Secondary CTA | Accent green bg, dark text |
+| `.btn-ghost` | Tertiary actions | Transparent, white text, border on hover |
+| `.btn-outline` | Navigation/subtle | Transparent, white border |
+
+**Example:**
+```jsx
+<Link href="/login" className="btn-primary">
+  start learning free
+  <ArrowRight className="h-5 w-5" />
+</Link>
+```
+
+**CSS Implementation:**
+```css
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 32px;
+  background: var(--text-white);
+  color: var(--bg-dark);
+  font-weight: 600;
+  font-size: calc(14px * var(--font-size-multiplier));
+  text-transform: lowercase;
+  letter-spacing: 0.5px;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.15);
+}
+```
+
+### Card Classes
+
+| Class | Usage | Appearance |
+|-------|-------|------------|
+| `.card-dark` | Standard cards | Dark bg, subtle border |
+| `.card-elevated` | Featured cards | Slightly lighter bg, more border |
+| `.card-featured` | CTA cards | Accent gradient, glow effect |
+| `.card-stat` | Stats display | Centered, minimal padding |
+
+**Example:**
+```jsx
+<div className="card-featured max-w-3xl mx-auto text-center">
+  <h2 className="text-section-title">your learning journey starts now.</h2>
+  <p className="text-body">...</p>
+</div>
+```
+
+### Typography Classes
+
+| Class | Size | Usage |
+|-------|------|-------|
+| `.text-hero` | 64-80px | Main landing hero headline |
+| `.text-section-title` | 32-40px | Section headings |
+| `.text-eyebrow` | 12px uppercase | Pre-heading labels |
+| `.text-body` | 16px | Standard body text |
+| `.text-body-lg` | 18-20px | Lead paragraphs |
+| `.text-muted-sm` | 14px | Helper text, captions |
+| `.link-muted` | 14px | Footer/nav links |
+
+**Example:**
+```jsx
+<span className="text-eyebrow">for engineers who ship</span>
+<h1 className="text-hero">master any skill.</h1>
+<p className="text-body-lg">personalized learning paths...</p>
+```
+
+### Animation Classes
+
+| Class | Effect | Duration |
+|-------|--------|----------|
+| `.animate-fade-in-up` | Fade in + slide up | 0.6s |
+| `.animate-delay-1` | Delay 0.1s | - |
+| `.animate-delay-2` | Delay 0.2s | - |
+| `.animate-delay-3` | Delay 0.3s | - |
+| `.animate-delay-4` | Delay 0.4s | - |
+| `.reveal` | Scroll-triggered reveal | - |
+| `.revealed` | Applied when in viewport | - |
+
+**Example:**
+```jsx
+<div className="animate-fade-in-up animate-delay-2">
+  <HeroVisual />
+</div>
+```
+
+### Layout Classes
+
+| Class | Usage |
+|-------|-------|
+| `.landing-page` | Root wrapper for landing pages |
+| `.noise-overlay` | Subtle texture background |
+| `.hero-gradient` | Radial gradient background |
+| `.hero-glow` | Accent color glow effect |
+| `.logo-strip` | Horizontal scrolling logo bar |
+| `.icon-box-accent` | Accent-colored icon container |
+
+---
+
+## 13. Logo Component Guidelines
+
+### Logo Component (`@/components/brand`)
+
+The logo has three variants for different use cases:
+
+#### 1. Standard Logo
+```jsx
+import { Logo } from "@/components/brand";
+
+// Sizes: sm (32px), md (40px), lg (56px), xl (80px)
+<Logo size="lg" />              // Logo mark + text
+<Logo size="md" showText={false} />  // Icon only
+```
+
+**Usage:**
+- Header: `size="lg"` with text
+- Footer: `size="md"` with text
+- Mobile header: `size="md"` with text
+
+#### 2. Animated Logo
+```jsx
+import { LogoAnimated } from "@/components/brand";
+
+<LogoAnimated className="w-32 h-32" />
+```
+
+**Usage:**
+- Hero sections (landing pages)
+- Loading states
+- Marketing materials
+
+**Features:**
+- Pulsing outer ring
+- Animated node sizes
+- Orbiting particle
+- Glowing top node
+
+#### 3. Icon Logo
+```jsx
+import { LogoIcon } from "@/components/brand";
+
+<LogoIcon size={32} />
+```
+
+**Usage:**
+- Favicons (generated via `icon.tsx`)
+- Small UI elements
+- Tab icons
+
+### Logo Design Specifications
+
+**Visual Elements:**
+- Circular base with gradient (#00D09C → #00FFB3)
+- Neural network pattern (4 nodes + connecting lines)
+- Top node represents "growth/enlightenment"
+- Dark nodes on bright background
+
+**Size Guidelines:**
+| Context | Size | Component |
+|---------|------|-----------|
+| Landing header | 56px | `<Logo size="lg" />` |
+| Dashboard header | 40px | `<Logo size="md" />` |
+| Footer | 40px | `<Logo size="md" />` |
+| Mobile header | 40px | `<Logo size="md" />` |
+| Favicon | 32px | `<LogoIcon size={32} />` |
+| Hero decoration | 120px+ | `<LogoAnimated />` |
+
+---
+
+## 14. Page Structure Patterns
+
+### Landing Page Structure
+
+```jsx
+<div className="landing-page">
+  {/* Background effects */}
+  <div className="noise-overlay decorative-bg" data-decorative="true" />
+  <div className="hero-gradient hero-glow" data-decorative="true" />
+
+  {/* Skip link for accessibility */}
+  <a href="#main-content" className="sr-only focus:not-sr-only ...">
+    skip to main content
+  </a>
+
+  {/* Header */}
+  <header className="relative">
+    <div className="container mx-auto flex items-center justify-between px-6" style={{ height: "var(--space-10)" }}>
+      <Logo size="lg" />
+      <div className="flex items-center gap-4">
+        <AccessibilityToolbar />
+        <Link href="/login" className="btn-outline">sign in</Link>
+      </div>
+    </div>
+  </header>
+
+  {/* Main Content */}
+  <main id="main-content">
+    {/* Hero Section */}
+    <section className="container mx-auto px-6 py-[var(--space-16)] lg:py-[var(--space-20)]">
+      ...
+    </section>
+
+    {/* Other sections with reveal animations */}
+    <section className="reveal">...</section>
+  </main>
+
+  {/* Footer */}
+  <footer className="relative border-t" style={{ borderColor: "rgba(255, 255, 255, 0.06)" }}>
+    ...
+  </footer>
+</div>
+```
+
+### Dashboard Page Structure (To Be Implemented)
+
+```jsx
+<div className="dashboard-page">
+  {/* Background - same as landing */}
+  <div className="noise-overlay decorative-bg" data-decorative="true" />
+
+  {/* Sidebar Navigation */}
+  <aside className="fixed left-0 top-0 h-full w-64 bg-[var(--bg-elevated)]">
+    <Logo size="md" className="p-6" />
+    <nav>...</nav>
+  </aside>
+
+  {/* Main Content Area */}
+  <main className="ml-64 min-h-screen">
+    {/* Top bar with user info */}
+    <header className="sticky top-0 h-16 bg-[var(--bg-dark)] border-b">
+      <AccessibilityToolbar />
+    </header>
+
+    {/* Page content */}
+    <div className="container mx-auto px-6 py-8">
+      ...
+    </div>
+  </main>
+</div>
+```
+
+---
+
+## 15. Component Patterns
+
+### Stats Component Pattern
+```jsx
+<section className="container mx-auto px-6 py-[var(--space-12)]">
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+    <div className="card-stat reveal">
+      <div className="text-4xl font-bold" style={{ color: "var(--accent-primary)" }}>
+        10 min
+      </div>
+      <div className="text-body mt-2">daily commitment</div>
+    </div>
+    {/* More stat cards */}
+  </div>
+</section>
+```
+
+### How It Works Pattern
+```jsx
+<section className="container mx-auto px-6 py-[var(--space-16)]">
+  <div className="text-center mb-12">
+    <span className="text-eyebrow">how it works</span>
+    <h2 className="text-section-title mt-4">simple. effective. daily.</h2>
+  </div>
+
+  <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-5xl mx-auto">
+    {steps.map((step, i) => (
+      <div key={i} className="card-dark text-center reveal" style={{ animationDelay: `${i * 0.1}s` }}>
+        <div className="icon-box-accent mx-auto mb-4">
+          <step.icon className="h-6 w-6" />
+        </div>
+        <div className="text-sm font-mono" style={{ color: "var(--accent-primary)" }}>
+          0{i + 1}
+        </div>
+        <h3 className="font-semibold mt-2">{step.title}</h3>
+        <p className="text-body text-sm mt-2">{step.description}</p>
+      </div>
+    ))}
+  </div>
+</section>
+```
+
+### Testimonial Card Pattern
+```jsx
+<div className="card-elevated p-8 reveal">
+  <div className="flex items-center gap-1 mb-4">
+    {[...Array(5)].map((_, i) => (
+      <Star key={i} className="h-4 w-4 fill-[var(--accent-primary)] text-[var(--accent-primary)]" />
+    ))}
+  </div>
+  <blockquote className="text-body-lg italic" style={{ color: "var(--text-white)" }}>
+    "{quote}"
+  </blockquote>
+  <div className="mt-6 flex items-center gap-3">
+    <div className="h-10 w-10 rounded-full bg-[var(--accent-glow)]" />
+    <div>
+      <div className="font-medium">{name}</div>
+      <div className="text-muted-sm">{role}</div>
+    </div>
+  </div>
+</div>
+```
+
+---
+
+## 16. Applying to Other Pages
+
+When rebuilding other pages (dashboard, onboarding, settings, etc.):
+
+### Checklist
+
+- [ ] Import and use `<Logo />` component for all logo instances
+- [ ] Use CSS class system instead of inline styles
+- [ ] Include `noise-overlay` and `hero-gradient` backgrounds
+- [ ] Add `AccessibilityToolbar` in header
+- [ ] Use `text-*` classes for typography
+- [ ] Use `btn-*` classes for buttons
+- [ ] Use `card-*` classes for cards
+- [ ] Add `reveal` class for scroll animations
+- [ ] Use `animate-fade-in-up` for entrance animations
+- [ ] Maintain lowercase text throughout
+- [ ] Use spacing variables (`var(--space-*)`)
+- [ ] Include skip link for accessibility
+- [ ] Test all accessibility toolbar options work
+
+### Color Usage Quick Reference
+
+| Element | Color Variable |
+|---------|---------------|
+| Page background | `var(--bg-dark)` |
+| Cards | `var(--bg-card)` or `var(--bg-elevated)` |
+| Primary text | `var(--text-white)` |
+| Secondary text | `var(--text-gray)` |
+| Muted text | `var(--text-muted)` |
+| Accent/CTA | `var(--accent-primary)` |
+| Hover states | `var(--accent-hover)` |
+| Glows/shadows | `var(--accent-glow)` |
+
+### Typography Quick Reference
+
+| Element | Class | Font Size |
+|---------|-------|-----------|
+| Hero headline | `.text-hero` | 64-80px |
+| Section title | `.text-section-title` | 32-40px |
+| Eyebrow | `.text-eyebrow` | 12px uppercase |
+| Body text | `.text-body` | 16px |
+| Lead text | `.text-body-lg` | 18-20px |
+| Small/caption | `.text-muted-sm` | 14px |
+
+---
+
+**Document Version:** 1.2
+**Last Updated:** December 31, 2025
+**Author:** DevOps Lab Design Team
+**Updates:** Added implementation reference, logo guidelines, page structure patterns, component patterns
