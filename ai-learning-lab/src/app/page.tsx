@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { AccessibilityToolbar } from "@/components/accessibility/AccessibilityToolbar";
+import { Logo } from "@/components/brand";
 import {
   HeroVisual,
   Stats,
@@ -41,17 +42,9 @@ export default function LandingPage() {
           style={{ height: "var(--space-10)" }}
         >
           {/* Logo */}
-          <div className="flex items-center gap-3 animate-fade-in-up">
-            <div className="icon-box-accent">
-              <Sparkles />
-            </div>
-            <span
-              className="text-xl font-medium lowercase tracking-tight"
-              style={{ color: "var(--text-white)" }}
-            >
-              ai learning lab
-            </span>
-          </div>
+          <Link href="/" className="animate-fade-in-up">
+            <Logo size="lg" />
+          </Link>
 
           {/* Nav */}
           <div className="flex items-center gap-4 animate-fade-in-up animate-delay-1">
@@ -161,17 +154,9 @@ export default function LandingPage() {
         >
           <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
             {/* Logo */}
-            <div className="flex items-center gap-2">
-              <div className="icon-box-accent" style={{ width: 32, height: 32 }}>
-                <Sparkles style={{ width: 16, height: 16 }} />
-              </div>
-              <span
-                className="text-sm font-medium lowercase"
-                style={{ color: "var(--text-white)" }}
-              >
-                ai learning lab
-              </span>
-            </div>
+            <Link href="/">
+              <Logo size="md" />
+            </Link>
 
             {/* Nav Links */}
             <nav className="flex flex-wrap items-center justify-center gap-6 text-sm lowercase">

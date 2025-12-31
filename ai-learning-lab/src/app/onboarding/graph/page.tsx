@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -25,7 +25,28 @@ interface GraphData {
   createdAt: string;
 }
 
+// Loading fallback component
+function GraphLoading() {
+  return (
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-zinc-50 via-white to-zinc-100">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.05),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]" />
+      <div className="relative flex min-h-screen items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-zinc-200 border-t-zinc-900" />
+      </div>
+    </div>
+  );
+}
+
+// Main page component wrapped in Suspense
 export default function TopicGraphPage() {
+  return (
+    <Suspense fallback={<GraphLoading />}>
+      <TopicGraphContent />
+    </Suspense>
+  );
+}
+
+function TopicGraphContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlTopicId = searchParams.get("topicId");

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { Suspense, useEffect, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -137,7 +137,27 @@ function SectionCard({ section, index }: { section: SectionData; index: number }
   );
 }
 
+// Loading fallback component
+function SummaryLoading() {
+  return (
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-zinc-50 via-white to-zinc-100">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.05),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]" />
+      <div className="relative flex min-h-screen items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-zinc-200 border-t-zinc-900" />
+      </div>
+    </div>
+  );
+}
+
 export default function SummaryPage() {
+  return (
+    <Suspense fallback={<SummaryLoading />}>
+      <SummaryContent />
+    </Suspense>
+  );
+}
+
+function SummaryContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const topicId = searchParams.get("topicId") || undefined;
