@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Instrument_Sans } from "next/font/google";
+import Script from "next/script";
 import { Toaster } from "@/components/ui/sonner";
+import { accessibilityInitScript } from "@/hooks/useAccessibility";
 import "./globals.css";
 
 const instrumentSans = Instrument_Sans({
@@ -48,6 +50,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" style={{ viewTransitionName: "root" } as React.CSSProperties}>
+      <head>
+        {/* Accessibility settings init - prevents flash of unstyled content */}
+        <Script
+          id="accessibility-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: accessibilityInitScript }}
+        />
+      </head>
       <body className={`${instrumentSans.variable} antialiased`}>
         {children}
         <Toaster position="bottom-right" />
