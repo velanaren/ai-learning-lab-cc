@@ -27,11 +27,17 @@ export class DLUService {
   /**
    * Get today's Daily Learning Unit for a user
    * Returns cached content if available, generates new content if not
+   * @param userId - The user ID
+   * @param requestedDay - Optional specific day to fetch
+   * @param topicId - Optional topic ID for multi-topic support
    */
-  async getTodaysDLU(userId: string, requestedDay?: number): Promise<DLU> {
-    // 1. Get user's active DailyPlan
+  async getTodaysDLU(userId: string, requestedDay?: number, topicId?: string): Promise<DLU> {
+    // 1. Get user's active DailyPlan (for specific topic if provided)
     const plan = await prisma.dailyPlan.findFirst({
-      where: { userId },
+      where: {
+        userId,
+        ...(topicId && { topicId }),
+      },
       orderBy: { generatedAt: "desc" },
     });
 
@@ -240,16 +246,25 @@ export class DLUService {
 
   /**
    * Mark a day as complete and create a MemoryEntry
+   * @param userId - The user ID
+   * @param conceptId - The concept ID being completed
+   * @param reflectionText - User's reflection text
+   * @param applicationCompleted - Whether application task was completed
+   * @param topicId - Optional topic ID for multi-topic support
    */
   async markDayComplete(
     userId: string,
     conceptId: string,
     reflectionText: string,
-    applicationCompleted: boolean
+    applicationCompleted: boolean,
+    topicId?: string
   ) {
-    // 1. Get the user's plan
+    // 1. Get the user's plan (for specific topic if provided)
     const plan = await prisma.dailyPlan.findFirst({
-      where: { userId },
+      where: {
+        userId,
+        ...(topicId && { topicId }),
+      },
       orderBy: { generatedAt: "desc" },
     });
 
@@ -301,14 +316,19 @@ export class DLUService {
 
   /**
    * Get completion status for all days
+   * @param userId - The user ID
+   * @param topicId - Optional topic ID for multi-topic support
    */
-  async getDayCompletionStatus(userId: string): Promise<{
+  async getDayCompletionStatus(userId: string, topicId?: string): Promise<{
     completedDays: number;
     totalDays: number;
     completedConceptIds: string[];
   }> {
     const plan = await prisma.dailyPlan.findFirst({
-      where: { userId },
+      where: {
+        userId,
+        ...(topicId && { topicId }),
+      },
       orderBy: { generatedAt: "desc" },
     });
 
@@ -329,9 +349,11 @@ export class DLUService {
 
   /**
    * Check if user has completed all days
+   * @param userId - The user ID
+   * @param topicId - Optional topic ID for multi-topic support
    */
-  async isLearningComplete(userId: string): Promise<boolean> {
-    const status = await this.getDayCompletionStatus(userId);
+  async isLearningComplete(userId: string, topicId?: string): Promise<boolean> {
+    const status = await this.getDayCompletionStatus(userId, topicId);
     return status.totalDays > 0 && status.completedDays >= status.totalDays;
   }
 }

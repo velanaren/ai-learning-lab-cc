@@ -5,15 +5,22 @@ import { prisma } from "@/lib/db/prisma";
 // ========================================
 // GET /api/onboarding/current-topic
 // ========================================
-// Get the user's current/latest topic
+// Get the user's current/latest topic or a specific topic by ID
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const user = await getCurrentUser();
 
-    // Get user's most recent topic
+    // Check for specific topicId in query params
+    const { searchParams } = new URL(request.url);
+    const topicId = searchParams.get("topicId");
+
+    // Get topic - either specific one or most recent
     const topic = await prisma.topic.findFirst({
-      where: { userId: user.id },
+      where: {
+        userId: user.id,
+        ...(topicId && { id: topicId }),
+      },
       orderBy: { createdAt: "desc" },
     });
 

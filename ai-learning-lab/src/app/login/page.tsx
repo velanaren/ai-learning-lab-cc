@@ -16,7 +16,7 @@ export default async function LoginPage() {
   // Edge Case 1: Redirect if already logged in
   const session = await auth();
   if (session?.user) {
-    redirect("/dashboard/today");
+    redirect("/dashboard");
   }
 
   // Edge Case 2: Check OAuth configuration

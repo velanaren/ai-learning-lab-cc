@@ -10,6 +10,7 @@ import type { CategoryOptions } from "@/lib/config/topic-categories";
 interface QuestionnaireFormProps {
   initialAnswers?: Record<string, any>;
   categoryOptions?: CategoryOptions;
+  topicId?: string;
 }
 
 interface SectionProps {
@@ -169,6 +170,7 @@ function QuestionLabel({ children, maxSelections }: QuestionLabelProps) {
 export function QuestionnaireForm({
   initialAnswers = {},
   categoryOptions,
+  topicId,
 }: QuestionnaireFormProps) {
   const [currentSection, setCurrentSection] = useState(1);
   const [answers, setAnswers] = useState(initialAnswers);
@@ -249,7 +251,7 @@ export function QuestionnaireForm({
       setCurrentSection(currentSection + 1);
     } else {
       startTransition(async () => {
-        await saveQuestionnaire(answers);
+        await saveQuestionnaire(answers, topicId);
       });
     }
   };

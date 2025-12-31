@@ -18,7 +18,7 @@ export default auth((req) => {
   }
 
   if (isLoggedIn && nextUrl.pathname === "/login") {
-    return Response.redirect(new URL("/onboarding", nextUrl));
+    return Response.redirect(new URL("/dashboard", nextUrl));
   }
 
   return;

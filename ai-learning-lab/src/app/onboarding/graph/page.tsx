@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   BookOpen,
@@ -27,6 +27,8 @@ interface GraphData {
 
 export default function TopicGraphPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlTopicId = searchParams.get("topicId");
   const [graph, setGraph] = useState<GraphData | null>(null);
   const [topicId, setTopicId] = useState<string>("");
   const [topicName, setTopicName] = useState<string>("");
@@ -37,17 +39,35 @@ export default function TopicGraphPage() {
   useEffect(() => {
     async function fetchOrGenerateGraph() {
       try {
-        // First, get the user's current topic
-        const topicRes = await fetch("/api/onboarding/current-topic");
-        if (!topicRes.ok) {
-          throw new Error("No topic found. Please start from the beginning.");
+        // Get the topic - either from URL param or fetch current topic
+        let currentTopicId = urlTopicId;
+        let currentTopicName = "";
+
+        if (urlTopicId) {
+          // Fetch specific topic by ID
+          const topicRes = await fetch(`/api/onboarding/current-topic?topicId=${urlTopicId}`);
+          if (!topicRes.ok) {
+            throw new Error("Topic not found. Please start from the beginning.");
+          }
+          const topicData = await topicRes.json();
+          currentTopicId = topicData.topic.id;
+          currentTopicName = topicData.topic.name;
+        } else {
+          // Fetch the most recent topic
+          const topicRes = await fetch("/api/onboarding/current-topic");
+          if (!topicRes.ok) {
+            throw new Error("No topic found. Please start from the beginning.");
+          }
+          const topicData = await topicRes.json();
+          currentTopicId = topicData.topic.id;
+          currentTopicName = topicData.topic.name;
         }
-        const topicData = await topicRes.json();
-        setTopicId(topicData.topic.id);
-        setTopicName(topicData.topic.name);
+
+        setTopicId(currentTopicId!);
+        setTopicName(currentTopicName);
 
         // Try to get existing graph
-        const graphRes = await fetch(`/api/topics/${topicData.topic.id}/graph`);
+        const graphRes = await fetch(`/api/topics/${currentTopicId}/graph`);
         if (!graphRes.ok) {
           throw new Error("Failed to fetch graph");
         }
@@ -63,7 +83,7 @@ export default function TopicGraphPage() {
           setIsLoading(false);
 
           const generateRes = await fetch(
-            `/api/topics/${topicData.topic.id}/graph`,
+            `/api/topics/${currentTopicId}/graph`,
             {
               method: "POST",
             }
@@ -88,7 +108,7 @@ export default function TopicGraphPage() {
     }
 
     fetchOrGenerateGraph();
-  }, []);
+  }, [urlTopicId]);
 
   const handleRegenerate = async (feedback: string) => {
     if (!topicId) return;
@@ -130,8 +150,8 @@ export default function TopicGraphPage() {
         throw new Error(errorData.error || "Failed to lock graph");
       }
 
-      // Redirect to dashboard
-      router.push("/dashboard/today");
+      // Redirect to topic-specific today page
+      router.push(`/dashboard/topics/${topicId}/today`);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Lock failed";
       setError(errorMessage);

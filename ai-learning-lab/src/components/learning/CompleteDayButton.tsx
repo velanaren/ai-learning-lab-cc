@@ -13,6 +13,7 @@ interface CompleteDayButtonProps {
   applicationCompleted: boolean;
   isAlreadyCompleted: boolean;
   isLastDay: boolean;
+  topicId?: string;
 }
 
 export function CompleteDayButton({
@@ -21,6 +22,7 @@ export function CompleteDayButton({
   applicationCompleted,
   isAlreadyCompleted,
   isLastDay,
+  topicId,
 }: CompleteDayButtonProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -29,6 +31,11 @@ export function CompleteDayButton({
   const [showEvidenceModal, setShowEvidenceModal] = useState(false);
   const [memoryEntryId, setMemoryEntryId] = useState<string | null>(null);
   const [isLearningComplete, setIsLearningComplete] = useState(false);
+
+  // Build memory URL based on whether we're in topic-specific or legacy view
+  const memoryUrl = topicId
+    ? `/dashboard/topics/${topicId}/memory`
+    : `/dashboard/memory`;
 
   const handleComplete = async () => {
     setIsLoading(true);
@@ -42,6 +49,7 @@ export function CompleteDayButton({
           conceptId,
           reflectionText: reflectionAnswers.filter(Boolean).join("\n\n"),
           applicationCompleted,
+          topicId,
         }),
       });
 
@@ -76,7 +84,7 @@ export function CompleteDayButton({
     // If learning is complete, navigate to memory after brief delay
     if (isLearningComplete) {
       setTimeout(() => {
-        router.push("/dashboard/memory");
+        router.push(memoryUrl);
       }, 2000);
     }
   };
@@ -145,7 +153,7 @@ export function CompleteDayButton({
 
         {isLastDay && (
           <Button
-            onClick={() => router.push("/dashboard/memory")}
+            onClick={() => router.push(memoryUrl)}
             className="group mt-6 h-14 rounded-2xl bg-zinc-900 px-8 text-base font-medium shadow-lg shadow-zinc-900/20 transition-all duration-200 hover:bg-zinc-800 hover:shadow-xl hover:shadow-zinc-900/25"
           >
             View Your Learning Journey

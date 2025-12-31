@@ -10,24 +10,31 @@ interface DayNavigationProps {
   currentDay: number;
   totalDays: number;
   completedDays: number;
+  topicId?: string;
 }
 
 export function DayNavigation({
   currentDay,
   totalDays,
   completedDays,
+  topicId,
 }: DayNavigationProps) {
   const router = useRouter();
 
+  // Build base URL based on whether we're in topic-specific or legacy view
+  const baseUrl = topicId
+    ? `/dashboard/topics/${topicId}/today`
+    : `/dashboard/today`;
+
   const goToPreviousDay = () => {
     if (currentDay > 1) {
-      router.push(`/dashboard/today?day=${currentDay - 1}`);
+      router.push(`${baseUrl}?day=${currentDay - 1}`);
     }
   };
 
   const goToNextDay = () => {
     if (currentDay < totalDays) {
-      router.push(`/dashboard/today?day=${currentDay + 1}`);
+      router.push(`${baseUrl}?day=${currentDay + 1}`);
     }
   };
 

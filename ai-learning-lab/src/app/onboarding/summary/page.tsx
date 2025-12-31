@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   User,
@@ -139,6 +139,8 @@ function SectionCard({ section, index }: { section: SectionData; index: number }
 
 export default function SummaryPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const topicId = searchParams.get("topicId") || undefined;
   const [summary, setSummary] = useState<string>("");
   const [topicName, setTopicName] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
@@ -148,7 +150,10 @@ export default function SummaryPage() {
   useEffect(() => {
     async function fetchSummary() {
       try {
-        const response = await fetch("/api/onboarding/summary", {
+        const url = topicId
+          ? `/api/onboarding/summary?topicId=${topicId}`
+          : "/api/onboarding/summary";
+        const response = await fetch(url, {
           method: "POST",
         });
 
@@ -170,12 +175,12 @@ export default function SummaryPage() {
     }
 
     fetchSummary();
-  }, []);
+  }, [topicId]);
 
   const handleConfirm = () => {
     startTransition(async () => {
       try {
-        await confirmAndContinue();
+        await confirmAndContinue(topicId);
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to confirm";

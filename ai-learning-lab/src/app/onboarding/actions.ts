@@ -24,13 +24,13 @@ export async function createTopic(topicName: string) {
     throw new Error("Authentication required");
   }
 
-  // Check if topic already exists
-  const existingTopic = await prisma.topic.findFirst({
+  // Check how many topics user already has (max 2 allowed)
+  const existingTopics = await prisma.topic.findMany({
     where: { userId: currentUser.id },
   });
 
-  if (existingTopic) {
-    redirect("/dashboard/today");
+  if (existingTopics.length >= 2) {
+    throw new Error("Maximum of 2 learning topics allowed. Please complete or remove an existing topic first.");
   }
 
   // Classify the topic to determine questionnaire options

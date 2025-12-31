@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/lib/auth/utils";
 import { prisma } from "@/lib/db/prisma";
 import { generateLearningStrategy } from "@/lib/utils/learning-strategy";
 
-export async function confirmAndContinue() {
+export async function confirmAndContinue(topicId?: string) {
   try {
     const user = await getCurrentUser();
 
@@ -18,9 +18,12 @@ export async function confirmAndContinue() {
       throw new Error("Profile not found. Please complete the questionnaire first.");
     }
 
-    // Get user's topic
+    // Get user's topic - either specific one or most recent
     const topic = await prisma.topic.findFirst({
-      where: { userId: user.id },
+      where: {
+        userId: user.id,
+        ...(topicId && { id: topicId }),
+      },
       orderBy: { createdAt: "desc" },
     });
 
@@ -31,8 +34,11 @@ export async function confirmAndContinue() {
     // Generate LearningStrategy from profile
     await generateLearningStrategy(user.id, topic.id, profile);
 
-    // Redirect to graph generation page
-    redirect("/onboarding/graph");
+    // Redirect to graph generation page with topicId
+    const graphUrl = topicId
+      ? `/onboarding/graph?topicId=${topicId}`
+      : `/onboarding/graph?topicId=${topic.id}`;
+    redirect(graphUrl);
   } catch (error) {
     // Re-throw redirect errors (Next.js uses them for navigation)
     if (error instanceof Error && error.message === "NEXT_REDIRECT") {

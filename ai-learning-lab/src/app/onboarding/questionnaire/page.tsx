@@ -7,21 +7,33 @@ import {
   type TopicCategory,
 } from "@/lib/config/topic-categories";
 
-export default async function QuestionnairePage() {
+interface QuestionnairePageProps {
+  searchParams: Promise<{ topicId?: string }>;
+}
+
+export default async function QuestionnairePage({
+  searchParams,
+}: QuestionnairePageProps) {
   const user = await getCurrentUser();
+  const { topicId } = await searchParams;
 
   // Check if user already has a profile (already completed questionnaire)
   const existingProfile = await prisma.userProfile.findUnique({
     where: { userId: user.id },
   });
 
-  if (existingProfile) {
+  // If profile exists and no specific topicId, redirect to summary
+  if (existingProfile && !topicId) {
     redirect("/onboarding/summary");
   }
 
-  // Check if user has a topic
+  // Get the topic - either specific one or most recent
   const topic = await prisma.topic.findFirst({
-    where: { userId: user.id },
+    where: {
+      userId: user.id,
+      ...(topicId && { id: topicId }),
+    },
+    orderBy: { createdAt: "desc" },
   });
 
   if (!topic) {
@@ -55,7 +67,7 @@ export default async function QuestionnairePage() {
           </div>
 
           {/* Questionnaire Form */}
-          <QuestionnaireForm categoryOptions={categoryOptions} />
+          <QuestionnaireForm categoryOptions={categoryOptions} topicId={topic.id} />
         </div>
       </div>
     </div>

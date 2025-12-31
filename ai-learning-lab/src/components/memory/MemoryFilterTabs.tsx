@@ -11,6 +11,7 @@ interface MemoryFilterTabsProps {
     applied: number;
     proofBacked: number;
   };
+  topicId?: string;
 }
 
 const tabs = [
@@ -19,9 +20,14 @@ const tabs = [
   { value: "proof-backed", label: "Proof-backed", icon: Paperclip, countKey: "proofBacked" as const },
 ];
 
-export function MemoryFilterTabs({ currentFilter, counts }: MemoryFilterTabsProps) {
+export function MemoryFilterTabs({ currentFilter, counts, topicId }: MemoryFilterTabsProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Build base URL based on whether we're in topic-specific or legacy view
+  const baseUrl = topicId
+    ? `/dashboard/topics/${topicId}/memory`
+    : `/dashboard/memory`;
 
   const handleFilterChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -30,7 +36,7 @@ export function MemoryFilterTabs({ currentFilter, counts }: MemoryFilterTabsProp
     } else {
       params.set("filter", value);
     }
-    router.push(`/dashboard/memory?${params.toString()}`);
+    router.push(`${baseUrl}?${params.toString()}`);
   };
 
   return (

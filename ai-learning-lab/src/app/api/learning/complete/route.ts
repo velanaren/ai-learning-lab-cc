@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     const user = await getCurrentUser();
     const body = await request.json();
 
-    const { conceptId, reflectionText, applicationCompleted } = body;
+    const { conceptId, reflectionText, applicationCompleted, topicId } = body;
 
     if (!conceptId || typeof conceptId !== "string") {
       return NextResponse.json(
@@ -36,17 +36,18 @@ export async function POST(request: Request) {
     // Sanitize user input before storing
     const sanitizedReflection = sanitizeAndLimit(reflectionText, 10000) || "";
 
-    // Mark day as complete
+    // Mark day as complete (with optional topicId for multi-topic support)
     const memoryEntry = await dluService.markDayComplete(
       user.id,
       conceptId,
       sanitizedReflection,
-      applicationCompleted || false
+      applicationCompleted || false,
+      topicId
     );
 
-    // Get updated status
-    const status = await dluService.getDayCompletionStatus(user.id);
-    const isLearningComplete = await dluService.isLearningComplete(user.id);
+    // Get updated status (with optional topicId for multi-topic support)
+    const status = await dluService.getDayCompletionStatus(user.id, topicId);
+    const isLearningComplete = await dluService.isLearningComplete(user.id, topicId);
 
     return NextResponse.json({
       success: true,
