@@ -6,7 +6,6 @@ import Link from "next/link";
 import {
   ArrowRight,
   ArrowLeft,
-  Sparkles,
   BookOpen,
   Target,
   Zap,
@@ -14,8 +13,8 @@ import {
   Settings,
   Check,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Logo, LogoAnimated } from "@/components/brand";
+import { AccessibilityToolbar } from "@/components/accessibility/AccessibilityToolbar";
 import { checkUserStatus, createNewTopic } from "./actions";
 
 type Step = "topic" | "preferences";
@@ -39,7 +38,7 @@ export default function NewTopicPage() {
         setCanCreateMore(status.canCreateMore);
 
         if (!status.canCreateMore) {
-          setError("You've reached the maximum of 2 learning topics. Complete or remove a topic to add more.");
+          setError("you've reached the maximum of 2 learning topics. complete or remove a topic to add more.");
         }
       } catch (err) {
         console.error("Error checking status:", err);
@@ -55,7 +54,7 @@ export default function NewTopicPage() {
     setError(null);
 
     if (!topic.trim() || topic.trim().length < 2) {
-      setError("Please enter a valid topic (at least 2 characters)");
+      setError("please enter a valid topic (at least 2 characters)");
       return;
     }
 
@@ -68,7 +67,7 @@ export default function NewTopicPage() {
         try {
           await createNewTopic(topic.trim(), false);
         } catch (err) {
-          setError(err instanceof Error ? err.message : "Something went wrong");
+          setError(err instanceof Error ? err.message : "something went wrong");
         }
       });
     }
@@ -76,7 +75,7 @@ export default function NewTopicPage() {
 
   const handlePreferencesSubmit = async () => {
     if (!selectedOption) {
-      setError("Please select an option");
+      setError("please select an option");
       return;
     }
 
@@ -84,7 +83,7 @@ export default function NewTopicPage() {
       try {
         await createNewTopic(topic.trim(), selectedOption === "reuse");
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Something went wrong");
+        setError(err instanceof Error ? err.message : "something went wrong");
       }
     });
   };
@@ -92,75 +91,97 @@ export default function NewTopicPage() {
   const features = [
     {
       icon: Target,
-      title: "Personalized Path",
-      description: "Tailored to your experience level",
+      title: "personalized path",
+      description: "tailored to your experience level",
     },
     {
       icon: BookOpen,
-      title: "Daily Learning",
-      description: "Bite-sized concepts, consistent progress",
+      title: "daily learning",
+      description: "bite-sized concepts, consistent progress",
     },
     {
       icon: Zap,
-      title: "Hands-on Practice",
-      description: "Learn by building real things",
+      title: "hands-on practice",
+      description: "learn by building real things",
     },
   ];
 
   if (isChecking) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-zinc-50 via-white to-zinc-100">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.05),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]" />
+      <div className="landing-page">
+        <div className="noise-overlay decorative-bg" data-decorative="true" />
+        <div className="hero-gradient" data-decorative="true" style={{ opacity: 0.3 }} />
         <div className="flex min-h-screen items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-900" />
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+            className="h-10 w-10 rounded-full border-4"
+            style={{
+              borderColor: "rgba(255, 255, 255, 0.1)",
+              borderTopColor: "var(--accent-primary)",
+            }}
+          />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-zinc-50 via-white to-zinc-100">
-      {/* Subtle background pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.05),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]" />
+    <div className="landing-page">
+      {/* Background effects */}
+      <div className="noise-overlay decorative-bg" data-decorative="true" />
+      <div className="hero-gradient hero-glow" data-decorative="true" />
 
-      <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
-        {/* Back link */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="absolute left-4 top-4 sm:left-6 sm:top-6"
+      {/* Skip link */}
+      <a
+        href="#topic-form"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:px-4 focus:py-2 focus:text-sm focus:font-medium"
+        style={{
+          backgroundColor: "var(--accent-primary)",
+          color: "var(--bg-dark)",
+        }}
+      >
+        skip to topic form
+      </a>
+
+      {/* Header */}
+      <header className="relative">
+        <div
+          className="container mx-auto flex items-center justify-between px-6"
+          style={{ height: "var(--space-10)" }}
         >
+          {/* Back to Dashboard */}
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-2 text-sm text-zinc-500 transition-colors hover:text-zinc-700"
+            className="btn-outline group animate-fade-in-up"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
+            <ArrowLeft className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-1" />
+            back to dashboard
           </Link>
-        </motion.div>
 
-        {/* Main Content */}
+          {/* Accessibility */}
+          <div className="animate-fade-in-up animate-delay-1">
+            <AccessibilityToolbar />
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="relative flex min-h-[calc(100vh-80px)] flex-col items-center justify-center px-6 py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="w-full max-w-xl"
         >
-          {/* Logo/Brand */}
+          {/* Logo Animation */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1, duration: 0.5 }}
             className="mb-8 flex justify-center"
           >
-            <div className="flex items-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900">
-                <Sparkles className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-xl font-medium text-zinc-900">
-                AI Learning Lab
-              </span>
-            </div>
+            <LogoAnimated className="h-20 w-20" />
           </motion.div>
 
           {/* Main Card */}
@@ -172,24 +193,24 @@ export default function NewTopicPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="overflow-hidden rounded-3xl border border-zinc-200/80 bg-white/80 p-8 shadow-xl shadow-zinc-200/50 backdrop-blur-xl sm:p-10"
+                className="card-featured"
               >
                 {/* Header */}
                 <div className="mb-8 text-center">
-                  <h1 className="text-3xl font-medium tracking-tight text-zinc-900 sm:text-4xl">
-                    Add a new topic
+                  <h1 className="text-section-title">
+                    add a new topic
                   </h1>
-                  <p className="mt-3 text-base leading-relaxed text-zinc-500">
-                    Enter any technical topic. We&apos;ll create a personalized
+                  <p className="text-body mt-3">
+                    enter any technical topic. we&apos;ll create a personalized
                     learning path just for you.
                   </p>
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleTopicSubmit} className="space-y-6">
+                <form id="topic-form" onSubmit={handleTopicSubmit} className="space-y-6">
                   <div className="space-y-2">
                     <div className="relative">
-                      <Input
+                      <input
                         id="topic"
                         name="topic"
                         value={topic}
@@ -197,8 +218,21 @@ export default function NewTopicPage() {
                           setTopic(e.target.value);
                           if (error) setError(null);
                         }}
-                        placeholder="e.g., Docker, Kubernetes, React hooks..."
-                        className="h-14 rounded-2xl border-zinc-200 bg-zinc-50/50 pl-5 pr-5 text-base transition-all duration-200 placeholder:text-zinc-400 focus:border-zinc-400 focus:bg-white focus:ring-2 focus:ring-zinc-900/10"
+                        placeholder="e.g., docker, kubernetes, react hooks..."
+                        className="h-14 w-full rounded-xl px-5 text-base lowercase transition-all duration-300 placeholder:lowercase focus:outline-none"
+                        style={{
+                          backgroundColor: "var(--bg-dark)",
+                          border: "1px solid rgba(255, 255, 255, 0.1)",
+                          color: "var(--text-white)",
+                        }}
+                        onFocus={(e) => {
+                          e.currentTarget.style.borderColor = "var(--accent-primary)";
+                          e.currentTarget.style.boxShadow = "0 0 0 2px var(--accent-glow)";
+                        }}
+                        onBlur={(e) => {
+                          e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)";
+                          e.currentTarget.style.boxShadow = "none";
+                        }}
                         required
                         autoFocus
                         disabled={isPending || !canCreateMore}
@@ -208,18 +242,18 @@ export default function NewTopicPage() {
                       <motion.p
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-sm text-red-500"
+                        className="text-sm lowercase"
+                        style={{ color: "#ef4444" }}
                       >
                         {error}
                       </motion.p>
                     )}
                   </div>
 
-                  <Button
+                  <button
                     type="submit"
-                    size="lg"
                     disabled={isPending || !topic.trim() || !canCreateMore}
-                    className="group h-14 w-full rounded-2xl bg-zinc-900 text-base font-medium shadow-lg shadow-zinc-900/20 transition-all duration-200 hover:bg-zinc-800 hover:shadow-xl hover:shadow-zinc-900/25 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="btn-accent w-full disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {isPending ? (
                       <span className="flex items-center gap-2">
@@ -230,26 +264,36 @@ export default function NewTopicPage() {
                             duration: 1,
                             ease: "linear",
                           }}
-                          className="h-5 w-5 rounded-full border-2 border-white/30 border-t-white"
+                          className="h-5 w-5 rounded-full border-2"
+                          style={{
+                            borderColor: "rgba(0, 0, 0, 0.3)",
+                            borderTopColor: "var(--bg-dark)",
+                          }}
                         />
-                        Creating your path...
+                        creating your path...
                       </span>
                     ) : (
                       <span className="flex items-center gap-2">
-                        Continue
+                        continue
                         <ArrowRight className="h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
                       </span>
                     )}
-                  </Button>
+                  </button>
                 </form>
 
                 {/* Divider */}
                 <div className="my-8 flex items-center gap-4">
-                  <div className="h-px flex-1 bg-zinc-200" />
-                  <span className="text-xs font-medium uppercase tracking-wider text-zinc-400">
-                    What you&apos;ll get
+                  <div
+                    className="h-px flex-1"
+                    style={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+                  />
+                  <span className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+                    what you&apos;ll get
                   </span>
-                  <div className="h-px flex-1 bg-zinc-200" />
+                  <div
+                    className="h-px flex-1"
+                    style={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+                  />
                 </div>
 
                 {/* Features */}
@@ -260,15 +304,18 @@ export default function NewTopicPage() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.4 + index * 0.1, duration: 0.5 }}
-                      className="group flex flex-col items-center rounded-2xl bg-zinc-50/80 p-4 text-center transition-colors duration-200 hover:bg-zinc-100/80"
+                      className="card-dark group flex flex-col items-center p-4 text-center"
                     >
-                      <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm transition-shadow duration-200 group-hover:shadow-md">
-                        <feature.icon className="h-5 w-5 text-zinc-600" />
+                      <div className="icon-box mb-3">
+                        <feature.icon className="h-5 w-5" />
                       </div>
-                      <h3 className="text-sm font-medium text-zinc-900">
+                      <h3
+                        className="text-sm font-medium lowercase"
+                        style={{ color: "var(--text-white)" }}
+                      >
                         {feature.title}
                       </h3>
-                      <p className="mt-0.5 text-xs text-zinc-500">
+                      <p className="mt-1 text-xs lowercase" style={{ color: "var(--text-gray)" }}>
                         {feature.description}
                       </p>
                     </motion.div>
@@ -282,21 +329,24 @@ export default function NewTopicPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="overflow-hidden rounded-3xl border border-zinc-200/80 bg-white/80 p-8 shadow-xl shadow-zinc-200/50 backdrop-blur-xl sm:p-10"
+                className="card-featured"
               >
                 {/* Header */}
                 <div className="mb-8 text-center">
-                  <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-zinc-100 px-4 py-2">
-                    <BookOpen className="h-4 w-4 text-zinc-600" />
-                    <span className="text-sm font-medium text-zinc-600">
-                      {topic}
+                  <div
+                    className="mb-4 inline-flex items-center gap-2 rounded-full px-4 py-2"
+                    style={{ backgroundColor: "var(--accent-glow)" }}
+                  >
+                    <BookOpen className="h-4 w-4" style={{ color: "var(--accent-primary)" }} />
+                    <span className="text-sm font-medium lowercase" style={{ color: "var(--accent-primary)" }}>
+                      {topic.toLowerCase()}
                     </span>
                   </div>
-                  <h1 className="text-2xl font-medium tracking-tight text-zinc-900 sm:text-3xl">
-                    Learning preferences
+                  <h1 className="text-section-title">
+                    learning preferences
                   </h1>
-                  <p className="mt-3 text-base leading-relaxed text-zinc-500">
-                    You already have learning preferences saved. Would you like
+                  <p className="text-body mt-3">
+                    you already have learning preferences saved. would you like
                     to use them for this topic?
                   </p>
                 </div>
@@ -308,51 +358,49 @@ export default function NewTopicPage() {
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
                     onClick={() => setSelectedOption("reuse")}
-                    className={`relative flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
-                      selectedOption === "reuse"
-                        ? "border-zinc-900 bg-zinc-900 text-white shadow-lg shadow-zinc-900/20"
-                        : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50"
-                    }`}
+                    className="relative flex w-full items-center gap-4 rounded-xl p-4 text-left transition-all duration-200"
+                    style={{
+                      backgroundColor: selectedOption === "reuse" ? "var(--accent-primary)" : "var(--bg-dark)",
+                      border: selectedOption === "reuse" ? "1px solid var(--accent-primary)" : "1px solid rgba(255, 255, 255, 0.1)",
+                    }}
                   >
                     <div
-                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
-                        selectedOption === "reuse"
-                          ? "bg-white/20"
-                          : "bg-zinc-100"
-                      }`}
+                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl"
+                      style={{
+                        backgroundColor: selectedOption === "reuse" ? "rgba(0, 0, 0, 0.2)" : "var(--bg-card)",
+                      }}
                     >
                       <RefreshCw
-                        className={`h-6 w-6 ${
-                          selectedOption === "reuse"
-                            ? "text-white"
-                            : "text-zinc-600"
-                        }`}
+                        className="h-6 w-6"
+                        style={{
+                          color: selectedOption === "reuse" ? "var(--bg-dark)" : "var(--accent-primary)",
+                        }}
                       />
                     </div>
                     <div className="flex-1">
                       <h3
-                        className={`font-medium ${
-                          selectedOption === "reuse"
-                            ? "text-white"
-                            : "text-zinc-900"
-                        }`}
+                        className="font-medium lowercase"
+                        style={{
+                          color: selectedOption === "reuse" ? "var(--bg-dark)" : "var(--text-white)",
+                        }}
                       >
-                        Use existing preferences
+                        use existing preferences
                       </h3>
                       <p
-                        className={`mt-0.5 text-sm ${
-                          selectedOption === "reuse"
-                            ? "text-zinc-300"
-                            : "text-zinc-500"
-                        }`}
+                        className="mt-0.5 text-sm lowercase"
+                        style={{
+                          color: selectedOption === "reuse" ? "rgba(0, 0, 0, 0.7)" : "var(--text-gray)",
+                        }}
                       >
-                        Skip questionnaire, go directly to building your
-                        learning path
+                        skip questionnaire, go directly to building your learning path
                       </p>
                     </div>
                     {selectedOption === "reuse" && (
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white">
-                        <Check className="h-4 w-4 text-zinc-900" />
+                      <div
+                        className="flex h-6 w-6 items-center justify-center rounded-full"
+                        style={{ backgroundColor: "var(--bg-dark)" }}
+                      >
+                        <Check className="h-4 w-4" style={{ color: "var(--accent-primary)" }} />
                       </div>
                     )}
                   </motion.button>
@@ -362,51 +410,49 @@ export default function NewTopicPage() {
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
                     onClick={() => setSelectedOption("customize")}
-                    className={`relative flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
-                      selectedOption === "customize"
-                        ? "border-zinc-900 bg-zinc-900 text-white shadow-lg shadow-zinc-900/20"
-                        : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50"
-                    }`}
+                    className="relative flex w-full items-center gap-4 rounded-xl p-4 text-left transition-all duration-200"
+                    style={{
+                      backgroundColor: selectedOption === "customize" ? "var(--accent-primary)" : "var(--bg-dark)",
+                      border: selectedOption === "customize" ? "1px solid var(--accent-primary)" : "1px solid rgba(255, 255, 255, 0.1)",
+                    }}
                   >
                     <div
-                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
-                        selectedOption === "customize"
-                          ? "bg-white/20"
-                          : "bg-zinc-100"
-                      }`}
+                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl"
+                      style={{
+                        backgroundColor: selectedOption === "customize" ? "rgba(0, 0, 0, 0.2)" : "var(--bg-card)",
+                      }}
                     >
                       <Settings
-                        className={`h-6 w-6 ${
-                          selectedOption === "customize"
-                            ? "text-white"
-                            : "text-zinc-600"
-                        }`}
+                        className="h-6 w-6"
+                        style={{
+                          color: selectedOption === "customize" ? "var(--bg-dark)" : "var(--accent-primary)",
+                        }}
                       />
                     </div>
                     <div className="flex-1">
                       <h3
-                        className={`font-medium ${
-                          selectedOption === "customize"
-                            ? "text-white"
-                            : "text-zinc-900"
-                        }`}
+                        className="font-medium lowercase"
+                        style={{
+                          color: selectedOption === "customize" ? "var(--bg-dark)" : "var(--text-white)",
+                        }}
                       >
-                        Customize preferences
+                        customize preferences
                       </h3>
                       <p
-                        className={`mt-0.5 text-sm ${
-                          selectedOption === "customize"
-                            ? "text-zinc-300"
-                            : "text-zinc-500"
-                        }`}
+                        className="mt-0.5 text-sm lowercase"
+                        style={{
+                          color: selectedOption === "customize" ? "rgba(0, 0, 0, 0.7)" : "var(--text-gray)",
+                        }}
                       >
-                        Answer questions to tailor this learning path
-                        specifically
+                        answer questions to tailor this learning path specifically
                       </p>
                     </div>
                     {selectedOption === "customize" && (
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white">
-                        <Check className="h-4 w-4 text-zinc-900" />
+                      <div
+                        className="flex h-6 w-6 items-center justify-center rounded-full"
+                        style={{ backgroundColor: "var(--bg-dark)" }}
+                      >
+                        <Check className="h-4 w-4" style={{ color: "var(--accent-primary)" }} />
                       </div>
                     )}
                   </motion.button>
@@ -416,7 +462,8 @@ export default function NewTopicPage() {
                   <motion.p
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mt-4 text-sm text-red-500"
+                    className="mt-4 text-sm lowercase"
+                    style={{ color: "#ef4444" }}
                   >
                     {error}
                   </motion.p>
@@ -424,24 +471,23 @@ export default function NewTopicPage() {
 
                 {/* Actions */}
                 <div className="mt-6 flex gap-3">
-                  <Button
+                  <button
                     type="button"
-                    variant="outline"
                     onClick={() => {
                       setStep("topic");
                       setSelectedOption(null);
                       setError(null);
                     }}
-                    className="h-14 flex-1 rounded-2xl border-2 border-zinc-200 px-8 text-base font-medium transition-all duration-200 hover:border-zinc-300 hover:bg-zinc-50"
+                    className="btn-outline flex-1"
                   >
-                    <ArrowLeft className="mr-2 h-5 w-5" />
-                    Back
-                  </Button>
-                  <Button
+                    <ArrowLeft className="h-5 w-5" />
+                    back
+                  </button>
+                  <button
                     type="button"
                     onClick={handlePreferencesSubmit}
                     disabled={isPending || !selectedOption}
-                    className="group h-14 flex-1 rounded-2xl bg-zinc-900 px-8 text-base font-medium shadow-lg shadow-zinc-900/20 transition-all duration-200 hover:bg-zinc-800 hover:shadow-xl hover:shadow-zinc-900/25 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="btn-accent flex-1 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {isPending ? (
                       <span className="flex items-center gap-2">
@@ -452,17 +498,21 @@ export default function NewTopicPage() {
                             duration: 1,
                             ease: "linear",
                           }}
-                          className="h-5 w-5 rounded-full border-2 border-white/30 border-t-white"
+                          className="h-5 w-5 rounded-full border-2"
+                          style={{
+                            borderColor: "rgba(0, 0, 0, 0.3)",
+                            borderTopColor: "var(--bg-dark)",
+                          }}
                         />
-                        Creating...
+                        creating...
                       </span>
                     ) : (
                       <span className="flex items-center gap-2">
-                        Continue
+                        continue
                         <ArrowRight className="h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
                       </span>
                     )}
-                  </Button>
+                  </button>
                 </div>
               </motion.div>
             )}
@@ -476,16 +526,16 @@ export default function NewTopicPage() {
               transition={{ delay: 0.7, duration: 0.5 }}
               className="mt-6 text-center"
             >
-              <p className="text-sm text-zinc-400">
-                Popular topics:{" "}
-                <span className="text-zinc-500">
-                  Docker • Kubernetes • React • PostgreSQL • System Design
+              <p className="text-sm lowercase" style={{ color: "var(--text-muted)" }}>
+                popular topics:{" "}
+                <span style={{ color: "var(--text-gray)" }}>
+                  docker • kubernetes • react • postgresql • system design
                 </span>
               </p>
             </motion.div>
           )}
         </motion.div>
-      </div>
+      </main>
     </div>
   );
 }

@@ -3,8 +3,8 @@ import Link from "next/link";
 import { auth } from "@/lib/auth/auth";
 import { prisma } from "@/lib/db/prisma";
 import { TopicCard } from "@/components/dashboard/TopicCard";
-import { Plus, Sparkles, BookOpen, Target, Zap } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Plus, BookOpen, Target, Zap } from "lucide-react";
+import { LogoAnimated } from "@/components/brand";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -62,141 +62,152 @@ export default async function DashboardPage() {
 
   const hasTopics = topicsWithProgress.length > 0;
   const canCreateMore = topicsWithProgress.length < 2;
+  const firstName = user.name?.split(" ")[0];
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-zinc-50 via-white to-zinc-100">
-      {/* Background pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.05),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]" />
+    <div className="relative" style={{ paddingTop: "var(--space-8)", paddingBottom: "var(--space-12)" }}>
+      {/* Hero gradient for dashboard */}
+      <div className="hero-gradient" data-decorative="true" style={{ opacity: 0.1 }} />
 
-      <div className="relative py-8 sm:py-12">
-        <div className="container mx-auto max-w-4xl px-4 sm:px-6">
-          {/* Header */}
-          <div className="mb-8 sm:mb-10">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-900">
-                <BookOpen className="h-6 w-6 text-white" />
-              </div>
-              <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600">
-                Learning Hub
-              </span>
+      <div className="container mx-auto max-w-4xl px-6">
+        {/* Header */}
+        <div className="mb-10 animate-fade-in-up">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="icon-box">
+              <BookOpen className="h-6 w-6" />
             </div>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <h1 className="text-3xl font-medium tracking-tight text-zinc-900 sm:text-4xl">
-                  Welcome back{user.name ? `, ${user.name.split(" ")[0]}` : ""}
-                </h1>
-                <p className="mt-2 text-base leading-relaxed text-zinc-500">
-                  {hasTopics
-                    ? "Continue your learning journey or start something new."
-                    : "Start your personalized learning journey today."}
+            <span className="text-eyebrow">learning hub</span>
+          </div>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h1 className="text-section-title">
+                welcome back{firstName ? `, ${firstName.toLowerCase()}` : ""}
+              </h1>
+              <p className="text-body mt-2">
+                {hasTopics
+                  ? "continue your learning journey or start something new."
+                  : "start your personalized learning journey today."}
+              </p>
+            </div>
+
+            {/* Create New Topic Button */}
+            {canCreateMore && (
+              <Link
+                href="/topics/new"
+                className="btn-accent animate-fade-in-up animate-delay-1"
+              >
+                <Plus className="h-5 w-5" />
+                new topic
+              </Link>
+            )}
+          </div>
+        </div>
+
+        {/* Topics Grid or Empty State */}
+        {hasTopics ? (
+          <div className="space-y-4">
+            <h2 className="text-eyebrow animate-fade-in-up animate-delay-1">
+              your learning topics
+            </h2>
+            <div className="grid gap-4 sm:gap-6">
+              {topicsWithProgress.map((topic, index) => (
+                <TopicCard
+                  key={topic.id}
+                  id={topic.id}
+                  name={topic.name}
+                  category={topic.category}
+                  completedDays={topic.completedDays}
+                  totalDays={topic.totalDays}
+                  createdAt={topic.createdAt}
+                  hasLockedGraph={topic.hasLockedGraph}
+                  index={index}
+                />
+              ))}
+            </div>
+
+            {/* Max topics info */}
+            {!canCreateMore && (
+              <div
+                className="mt-6 rounded-xl border p-4 text-center animate-fade-in-up"
+                style={{
+                  backgroundColor: "var(--bg-card)",
+                  borderColor: "rgba(255, 255, 255, 0.06)",
+                }}
+              >
+                <p className="text-body text-sm">
+                  you&apos;ve reached the maximum of 2 learning topics.
+                  complete or remove a topic to add more.
                 </p>
               </div>
-
-              {/* Create New Topic Button */}
-              {canCreateMore && (
-                <Link href="/topics/new">
-                  <Button className="group h-12 rounded-2xl bg-zinc-900 px-6 text-base font-medium shadow-lg shadow-zinc-900/20 transition-all duration-200 hover:bg-zinc-800 hover:shadow-xl hover:shadow-zinc-900/25">
-                    <Plus className="mr-2 h-5 w-5" />
-                    New Topic
-                  </Button>
-                </Link>
-              )}
-            </div>
+            )}
           </div>
-
-          {/* Topics Grid or Empty State */}
-          {hasTopics ? (
-            <div className="space-y-4">
-              <h2 className="text-sm font-medium uppercase tracking-wider text-zinc-500">
-                Your Learning Topics
-              </h2>
-              <div className="grid gap-4 sm:gap-6">
-                {topicsWithProgress.map((topic, index) => (
-                  <TopicCard
-                    key={topic.id}
-                    id={topic.id}
-                    name={topic.name}
-                    category={topic.category}
-                    completedDays={topic.completedDays}
-                    totalDays={topic.totalDays}
-                    createdAt={topic.createdAt}
-                    hasLockedGraph={topic.hasLockedGraph}
-                    index={index}
-                  />
-                ))}
-              </div>
-
-              {/* Max topics info */}
-              {!canCreateMore && (
-                <div className="mt-6 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-center">
-                  <p className="text-sm text-zinc-500">
-                    You&apos;ve reached the maximum of 2 learning topics.
-                    Complete or remove a topic to add more.
-                  </p>
-                </div>
-              )}
+        ) : (
+          /* Empty State */
+          <div className="card-featured text-center animate-fade-in-up animate-delay-1">
+            <div className="mb-6 flex justify-center">
+              <LogoAnimated className="h-24 w-24" />
             </div>
-          ) : (
-            /* Empty State */
-            <div className="rounded-3xl border border-zinc-200/80 bg-white p-8 text-center shadow-xl shadow-zinc-200/30 sm:p-12">
-              <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-zinc-100">
-                <Sparkles className="h-8 w-8 text-zinc-600" />
-              </div>
-              <h2 className="text-2xl font-medium tracking-tight text-zinc-900">
-                Start Your Learning Journey
-              </h2>
-              <p className="mx-auto mt-3 max-w-md text-base leading-relaxed text-zinc-500">
-                Choose a topic you want to master. We&apos;ll create a
-                personalized learning path tailored to your goals and
-                preferences.
-              </p>
+            <h2 className="text-section-title mb-4">
+              start your learning journey
+            </h2>
+            <p className="text-body mx-auto max-w-md mb-8">
+              choose a topic you want to master. we&apos;ll create a
+              personalized learning path tailored to your goals and
+              preferences.
+            </p>
 
-              {/* Features */}
-              <div className="mt-8 grid gap-4 sm:grid-cols-3">
-                <div className="rounded-2xl bg-zinc-50 p-4">
-                  <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100">
-                    <Target className="h-5 w-5 text-zinc-600" />
-                  </div>
-                  <h3 className="text-sm font-medium text-zinc-900">
-                    Personalized Path
-                  </h3>
-                  <p className="mt-1 text-xs text-zinc-500">
-                    AI-generated learning plan based on your goals
-                  </p>
+            {/* Features */}
+            <div className="mt-8 grid gap-4 sm:grid-cols-3 max-w-3xl mx-auto">
+              <div className="card-dark p-5 text-center">
+                <div className="icon-box mx-auto mb-3">
+                  <Target className="h-5 w-5" />
                 </div>
-                <div className="rounded-2xl bg-zinc-50 p-4">
-                  <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100">
-                    <BookOpen className="h-5 w-5 text-zinc-600" />
-                  </div>
-                  <h3 className="text-sm font-medium text-zinc-900">
-                    Daily Learning
-                  </h3>
-                  <p className="mt-1 text-xs text-zinc-500">
-                    Bite-sized lessons that fit your schedule
-                  </p>
-                </div>
-                <div className="rounded-2xl bg-zinc-50 p-4">
-                  <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100">
-                    <Zap className="h-5 w-5 text-zinc-600" />
-                  </div>
-                  <h3 className="text-sm font-medium text-zinc-900">
-                    Hands-on Practice
-                  </h3>
-                  <p className="mt-1 text-xs text-zinc-500">
-                    Apply what you learn with real exercises
-                  </p>
-                </div>
+                <h3
+                  className="text-sm font-medium lowercase mb-1"
+                  style={{ color: "var(--text-white)" }}
+                >
+                  personalized path
+                </h3>
+                <p className="text-muted-sm">
+                  ai-generated learning plan based on your goals
+                </p>
               </div>
-
-              <Link href="/topics/new" className="mt-8 inline-block">
-                <Button className="group h-14 rounded-2xl bg-zinc-900 px-8 text-base font-medium shadow-lg shadow-zinc-900/20 transition-all duration-200 hover:bg-zinc-800 hover:shadow-xl hover:shadow-zinc-900/25">
-                  <Plus className="mr-2 h-5 w-5" />
-                  Create Your First Topic
-                </Button>
-              </Link>
+              <div className="card-dark p-5 text-center">
+                <div className="icon-box mx-auto mb-3">
+                  <BookOpen className="h-5 w-5" />
+                </div>
+                <h3
+                  className="text-sm font-medium lowercase mb-1"
+                  style={{ color: "var(--text-white)" }}
+                >
+                  daily learning
+                </h3>
+                <p className="text-muted-sm">
+                  bite-sized lessons that fit your schedule
+                </p>
+              </div>
+              <div className="card-dark p-5 text-center">
+                <div className="icon-box mx-auto mb-3">
+                  <Zap className="h-5 w-5" />
+                </div>
+                <h3
+                  className="text-sm font-medium lowercase mb-1"
+                  style={{ color: "var(--text-white)" }}
+                >
+                  hands-on practice
+                </h3>
+                <p className="text-muted-sm">
+                  apply what you learn with real exercises
+                </p>
+              </div>
             </div>
-          )}
-        </div>
+
+            <Link href="/topics/new" className="btn-primary mt-8 inline-flex">
+              <Plus className="h-5 w-5" />
+              create your first topic
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );

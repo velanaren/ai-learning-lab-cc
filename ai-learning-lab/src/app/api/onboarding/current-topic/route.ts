@@ -15,14 +15,32 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const topicId = searchParams.get("topicId");
 
-    // Get topic - either specific one or most recent
-    const topic = await prisma.topic.findFirst({
-      where: {
-        userId: user.id,
-        ...(topicId && { id: topicId }),
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    let topic;
+
+    if (topicId && topicId.trim()) {
+      // Fetch specific topic by ID - use findUnique for exact match
+      topic = await prisma.topic.findUnique({
+        where: {
+          id: topicId,
+        },
+      });
+
+      // Verify the topic belongs to the current user
+      if (topic && topic.userId !== user.id) {
+        return NextResponse.json(
+          { error: "Topic not found or access denied." },
+          { status: 404 }
+        );
+      }
+    } else {
+      // Fetch the most recent topic for the user
+      topic = await prisma.topic.findFirst({
+        where: {
+          userId: user.id,
+        },
+        orderBy: { createdAt: "desc" },
+      });
+    }
 
     if (!topic) {
       return NextResponse.json(

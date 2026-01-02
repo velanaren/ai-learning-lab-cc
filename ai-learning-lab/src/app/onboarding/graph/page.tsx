@@ -8,9 +8,9 @@ import {
   Clock,
   Layers,
   AlertCircle,
-  Sparkles,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Logo, LogoAnimated } from "@/components/brand";
+import { AccessibilityToolbar } from "@/components/accessibility/AccessibilityToolbar";
 import { ConceptSection } from "@/components/onboarding/ConceptSection";
 import { RegenerateButton } from "@/components/onboarding/RegenerateButton";
 import { LockGraphButton } from "@/components/onboarding/LockGraphButton";
@@ -28,10 +28,19 @@ interface GraphData {
 // Loading fallback component
 function GraphLoading() {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-zinc-50 via-white to-zinc-100">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.05),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]" />
+    <div className="landing-page">
+      <div className="noise-overlay decorative-bg" data-decorative="true" />
+      <div className="hero-gradient" data-decorative="true" style={{ opacity: 0.3 }} />
       <div className="relative flex min-h-screen items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-zinc-200 border-t-zinc-900" />
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+          className="h-12 w-12 rounded-full border-4"
+          style={{
+            borderColor: "rgba(255, 255, 255, 0.1)",
+            borderTopColor: "var(--accent-primary)",
+          }}
+        />
       </div>
     </div>
   );
@@ -60,35 +69,46 @@ function TopicGraphContent() {
   useEffect(() => {
     async function fetchOrGenerateGraph() {
       try {
-        // Get the topic - either from URL param or fetch current topic
-        let currentTopicId = urlTopicId;
-        let currentTopicName = "";
-
-        if (urlTopicId) {
-          // Fetch specific topic by ID
-          const topicRes = await fetch(`/api/onboarding/current-topic?topicId=${urlTopicId}`);
-          if (!topicRes.ok) {
-            throw new Error("Topic not found. Please start from the beginning.");
-          }
-          const topicData = await topicRes.json();
-          currentTopicId = topicData.topic.id;
-          currentTopicName = topicData.topic.name;
-        } else {
-          // Fetch the most recent topic
-          const topicRes = await fetch("/api/onboarding/current-topic");
+        // Require topicId in URL for new topic creation flow
+        if (!urlTopicId) {
+          // Fallback: fetch the most recent topic
+          const topicRes = await fetch("/api/onboarding/current-topic", {
+            cache: "no-store",
+          });
           if (!topicRes.ok) {
             throw new Error("No topic found. Please start from the beginning.");
           }
           const topicData = await topicRes.json();
-          currentTopicId = topicData.topic.id;
-          currentTopicName = topicData.topic.name;
+          // Redirect to the proper URL with topicId
+          router.replace(`/onboarding/graph?topicId=${topicData.topic.id}`);
+          return;
         }
 
-        setTopicId(currentTopicId!);
+        // Fetch the specific topic by ID with cache disabled
+        const topicRes = await fetch(`/api/onboarding/current-topic?topicId=${urlTopicId}`, {
+          cache: "no-store",
+        });
+        if (!topicRes.ok) {
+          throw new Error("Topic not found. Please start from the beginning.");
+        }
+        const topicData = await topicRes.json();
+
+        // Validate the returned topic matches the requested one
+        if (topicData.topic.id !== urlTopicId) {
+          console.error("Topic ID mismatch:", { requested: urlTopicId, received: topicData.topic.id });
+          throw new Error("Topic mismatch. Please try again.");
+        }
+
+        const currentTopicId = topicData.topic.id;
+        const currentTopicName = topicData.topic.name;
+
+        setTopicId(currentTopicId);
         setTopicName(currentTopicName);
 
-        // Try to get existing graph
-        const graphRes = await fetch(`/api/topics/${currentTopicId}/graph`);
+        // Try to get existing graph with cache disabled
+        const graphRes = await fetch(`/api/topics/${currentTopicId}/graph`, {
+          cache: "no-store",
+        });
         if (!graphRes.ok) {
           throw new Error("Failed to fetch graph");
         }
@@ -107,6 +127,7 @@ function TopicGraphContent() {
             `/api/topics/${currentTopicId}/graph`,
             {
               method: "POST",
+              cache: "no-store",
             }
           );
 
@@ -129,7 +150,7 @@ function TopicGraphContent() {
     }
 
     fetchOrGenerateGraph();
-  }, [urlTopicId]);
+  }, [urlTopicId, router]);
 
   const handleRegenerate = async (feedback: string) => {
     if (!topicId) return;
@@ -192,31 +213,34 @@ function TopicGraphContent() {
   // Error state
   if (error) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-zinc-50 via-white to-zinc-100">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.05),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]" />
+      <div className="landing-page">
+        <div className="noise-overlay decorative-bg" data-decorative="true" />
+        <div className="hero-gradient" data-decorative="true" style={{ opacity: 0.3 }} />
 
-        <div className="relative flex min-h-screen items-center justify-center px-4 py-12">
+        <div className="relative flex min-h-screen items-center justify-center px-6 py-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="w-full max-w-lg"
           >
-            <div className="rounded-3xl border border-red-200 bg-white p-8 shadow-xl shadow-red-100/50">
-              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-100">
-                <AlertCircle className="h-7 w-7 text-red-600" />
-              </div>
-              <h2 className="text-2xl font-medium tracking-tight text-zinc-900">
-                Something went wrong
-              </h2>
-              <p className="mt-3 text-base leading-relaxed text-zinc-500">
-                {error}
-              </p>
-              <Button
-                onClick={() => router.push("/onboarding/summary")}
-                className="mt-6 h-14 w-full rounded-2xl bg-zinc-900 text-base font-medium shadow-lg shadow-zinc-900/20 transition-all duration-200 hover:bg-zinc-800 hover:shadow-xl hover:shadow-zinc-900/25"
+            <div
+              className="card-dark p-8"
+              style={{ borderColor: "rgba(239, 68, 68, 0.3)" }}
+            >
+              <div
+                className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl"
+                style={{ backgroundColor: "rgba(239, 68, 68, 0.15)" }}
               >
-                Go Back
-              </Button>
+                <AlertCircle className="h-7 w-7" style={{ color: "#ef4444" }} />
+              </div>
+              <h2 className="text-section-title mb-2">something went wrong</h2>
+              <p className="text-body mb-6">{error}</p>
+              <button
+                onClick={() => router.push("/onboarding/summary")}
+                className="btn-accent w-full"
+              >
+                go back
+              </button>
             </div>
           </motion.div>
         </div>
@@ -225,39 +249,59 @@ function TopicGraphContent() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-zinc-50 via-white to-zinc-100">
-      {/* Subtle background pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.05),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]" />
+    <div className="landing-page">
+      {/* Background effects */}
+      <div className="noise-overlay decorative-bg" data-decorative="true" />
+      <div className="hero-gradient" data-decorative="true" style={{ opacity: 0.3 }} />
 
-      <div className="relative py-8 sm:py-12">
-        <div className="container mx-auto max-w-4xl px-4 sm:px-6">
+      {/* Header */}
+      <header className="relative">
+        <div
+          className="container mx-auto flex items-center justify-between px-6"
+          style={{ height: "var(--space-10)" }}
+        >
+          <Logo size="md" className="animate-fade-in-up" />
+          <div className="animate-fade-in-up animate-delay-1">
+            <AccessibilityToolbar />
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="relative" style={{ paddingTop: "var(--space-8)", paddingBottom: "var(--space-12)" }}>
+        <div className="container mx-auto max-w-4xl px-6">
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="mb-8 text-center sm:mb-10"
+            className="mb-10 text-center"
           >
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-zinc-900 px-4 py-2">
-              <Layers className="h-4 w-4 text-white" />
-              <span className="text-sm font-medium text-white">
-                Your Learning Path
+            <div
+              className="mb-4 inline-flex items-center gap-2 rounded-full px-4 py-2"
+              style={{
+                backgroundColor: "var(--accent-glow)",
+              }}
+            >
+              <Layers className="h-4 w-4" style={{ color: "var(--accent-primary)" }} />
+              <span className="text-sm font-medium lowercase" style={{ color: "var(--accent-primary)" }}>
+                your learning path
               </span>
             </div>
-            <h1 className="text-3xl font-medium tracking-tight text-zinc-900 sm:text-4xl">
+            <h1 className="text-section-title">
               {isLoading || isGenerating ? (
-                "Building your learning path..."
+                "building your learning path..."
               ) : (
                 <>
-                  Review Your <span className="text-zinc-600">{topicName}</span>{" "}
-                  Journey
+                  review your <span style={{ color: "var(--accent-primary)" }}>{topicName?.toLowerCase()}</span>{" "}
+                  journey
                 </>
               )}
             </h1>
-            <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-zinc-500">
+            <p className="text-body mx-auto mt-3 max-w-xl">
               {isLoading || isGenerating
-                ? "We're analyzing your profile to create the perfect learning sequence."
-                : `We've created a ${nodes.length}-concept learning path. Review the outline below, then lock it to start learning.`}
+                ? "we're analyzing your profile to create the perfect learning sequence."
+                : `we've created a ${nodes.length}-concept learning path. review the outline below, then lock it to start learning.`}
             </p>
           </motion.div>
 
@@ -269,26 +313,26 @@ function TopicGraphContent() {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="mb-8 grid grid-cols-3 gap-4"
             >
-              <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 text-center shadow-lg shadow-zinc-200/30">
-                <BookOpen className="mx-auto mb-2 h-6 w-6 text-zinc-600" />
-                <p className="text-2xl font-medium text-zinc-900">
+              <div className="card-dark p-4 text-center">
+                <BookOpen className="mx-auto mb-2 h-6 w-6" style={{ color: "var(--accent-primary)" }} />
+                <p className="text-2xl font-medium" style={{ color: "var(--text-white)" }}>
                   {nodes.length}
                 </p>
-                <p className="text-sm text-zinc-500">Concepts</p>
+                <p className="text-sm lowercase" style={{ color: "var(--text-gray)" }}>concepts</p>
               </div>
-              <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 text-center shadow-lg shadow-zinc-200/30">
-                <Clock className="mx-auto mb-2 h-6 w-6 text-zinc-600" />
-                <p className="text-2xl font-medium text-zinc-900">
+              <div className="card-dark p-4 text-center">
+                <Clock className="mx-auto mb-2 h-6 w-6" style={{ color: "var(--accent-primary)" }} />
+                <p className="text-2xl font-medium" style={{ color: "var(--text-white)" }}>
                   ~{totalHours}
                 </p>
-                <p className="text-sm text-zinc-500">Hours Total</p>
+                <p className="text-sm lowercase" style={{ color: "var(--text-gray)" }}>hours total</p>
               </div>
-              <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 text-center shadow-lg shadow-zinc-200/30">
-                <Sparkles className="mx-auto mb-2 h-6 w-6 text-zinc-600" />
-                <p className="text-2xl font-medium text-zinc-900">
+              <div className="card-dark p-4 text-center">
+                <LogoAnimated className="mx-auto mb-2 h-6 w-6" />
+                <p className="text-2xl font-medium" style={{ color: "var(--text-white)" }}>
                   v{graph.version}
                 </p>
-                <p className="text-sm text-zinc-500">Version</p>
+                <p className="text-sm lowercase" style={{ color: "var(--text-gray)" }}>version</p>
               </div>
             </motion.div>
           )}
@@ -298,7 +342,7 @@ function TopicGraphContent() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15 }}
-            className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-xl shadow-zinc-200/30 sm:p-8"
+            className="card-featured"
           >
             {isLoading || isGenerating ? (
               <div className="space-y-6 py-8">
@@ -312,9 +356,13 @@ function TopicGraphContent() {
                         duration: 1.5,
                         ease: "linear",
                       }}
-                      className="h-12 w-12 rounded-full border-4 border-zinc-200 border-t-zinc-900"
+                      className="h-12 w-12 rounded-full border-4"
+                      style={{
+                        borderColor: "rgba(255, 255, 255, 0.1)",
+                        borderTopColor: "var(--accent-primary)",
+                      }}
                     />
-                    <p className="text-base text-zinc-500">Loading...</p>
+                    <p className="text-sm lowercase" style={{ color: "var(--text-gray)" }}>loading...</p>
                   </div>
                 )}
 
@@ -327,11 +375,11 @@ function TopicGraphContent() {
                 <div className="mt-8 space-y-6">
                   {[1, 2, 3].map((i) => (
                     <div key={i} className="space-y-3">
-                      <div className="h-6 w-48 animate-pulse rounded-lg bg-zinc-100" />
+                      <div className="skeleton h-6 w-48 rounded-lg" />
                       <div className="space-y-2">
-                        <div className="h-14 w-full animate-pulse rounded-xl bg-zinc-100" />
-                        <div className="h-14 w-full animate-pulse rounded-xl bg-zinc-100" />
-                        <div className="h-14 w-full animate-pulse rounded-xl bg-zinc-100" />
+                        <div className="skeleton h-14 w-full rounded-xl" />
+                        <div className="skeleton h-14 w-full rounded-xl" />
+                        <div className="skeleton h-14 w-full rounded-xl" />
                       </div>
                     </div>
                   ))}
@@ -383,14 +431,15 @@ function TopicGraphContent() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.3 }}
-              className="mt-6 text-center text-sm text-zinc-400"
+              className="mt-6 text-center text-sm lowercase"
+              style={{ color: "var(--text-muted)" }}
             >
-              Once locked, your learning path cannot be changed. Review
+              once locked, your learning path cannot be changed. review
               carefully before continuing.
             </motion.p>
           )}
         </div>
-      </div>
+      </main>
     </div>
   );
 }

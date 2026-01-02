@@ -41,23 +41,37 @@ function SettingsLink({
   return (
     <Link
       href={href}
-      className="group flex items-center gap-4 rounded-2xl border-2 border-zinc-200 bg-white p-4 transition-all duration-200 hover:border-zinc-300 hover:bg-zinc-50 hover:shadow-md"
+      className="card-dark group flex items-center gap-4 p-4 transition-all duration-300"
     >
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-zinc-100 transition-colors group-hover:bg-zinc-200">
-        {icon}
-      </div>
+      <div className="icon-box flex-shrink-0">{icon}</div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <h3 className="font-medium text-zinc-900">{title}</h3>
+          <h3
+            className="font-medium lowercase"
+            style={{ color: "var(--text-white)" }}
+          >
+            {title}
+          </h3>
           {badge && (
-            <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+            <span
+              className="rounded-full px-2 py-0.5 text-xs font-medium lowercase"
+              style={{
+                backgroundColor: "rgba(34, 197, 94, 0.15)",
+                color: "#22c55e",
+              }}
+            >
               {badge}
             </span>
           )}
         </div>
-        <p className="mt-0.5 text-sm text-zinc-500">{description}</p>
+        <p className="mt-0.5 text-sm lowercase" style={{ color: "var(--text-gray)" }}>
+          {description}
+        </p>
       </div>
-      <ChevronRight className="h-5 w-5 shrink-0 text-zinc-400 transition-transform group-hover:translate-x-0.5" />
+      <ChevronRight
+        className="h-5 w-5 flex-shrink-0 transition-transform group-hover:translate-x-0.5"
+        style={{ color: "var(--text-muted)" }}
+      />
     </Link>
   );
 }
@@ -74,14 +88,18 @@ function SettingsSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-xl shadow-zinc-200/30">
+    <div className="card-elevated">
       <div className="mb-6 flex items-start gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-zinc-100">
-          <Icon className="h-6 w-6 text-zinc-600" />
+        <div className="icon-box flex-shrink-0">
+          <Icon className="h-6 w-6" />
         </div>
         <div>
-          <h2 className="text-lg font-medium text-zinc-900">{title}</h2>
-          <p className="mt-0.5 text-sm text-zinc-500">{description}</p>
+          <h2 className="text-lg font-medium lowercase" style={{ color: "var(--text-white)" }}>
+            {title}
+          </h2>
+          <p className="mt-0.5 text-sm lowercase" style={{ color: "var(--text-gray)" }}>
+            {description}
+          </p>
         </div>
       </div>
       {children}
@@ -134,129 +152,147 @@ export default async function SettingsPage() {
     "tldr-first";
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-zinc-50 via-white to-zinc-100">
-      {/* Background pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.05),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]" />
+    <div className="relative" style={{ paddingTop: "var(--space-8)", paddingBottom: "var(--space-12)" }}>
+      {/* Hero gradient */}
+      <div className="hero-gradient" data-decorative="true" style={{ opacity: 0.1 }} />
 
-      <div className="relative py-8 sm:py-12">
-        <div className="container mx-auto max-w-3xl px-4 sm:px-6">
-          {/* Header */}
-          <div className="mb-8 sm:mb-10">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-zinc-100 px-4 py-2">
-              <Sliders className="h-4 w-4 text-zinc-600" />
-              <span className="text-sm font-medium text-zinc-600">
-                Preferences
-              </span>
+      <div className="container mx-auto max-w-3xl px-6">
+        {/* Header */}
+        <div className="mb-10 animate-fade-in-up">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="icon-box">
+              <Sliders className="h-6 w-6" />
             </div>
-            <h1 className="text-3xl font-medium tracking-tight text-zinc-900 sm:text-4xl">
-              Settings
-            </h1>
-            <p className="mt-2 text-base leading-relaxed text-zinc-500">
-              Customize your learning experience
-            </p>
+            <span className="text-eyebrow">preferences</span>
           </div>
+          <h1 className="text-section-title">settings</h1>
+          <p className="text-body mt-2">
+            customize your learning experience
+          </p>
+        </div>
 
-          {/* Settings Sections */}
-          <div className="space-y-6">
-            {/* Learning Preferences */}
-            <AnimatedSection delay={0}>
-              <SettingsSection
-                icon={Clock}
-                title="Learning Preferences"
-                description="Set your time budget and pacing preferences"
+        {/* Settings Sections */}
+        <div className="space-y-6">
+          {/* Learning Preferences */}
+          <AnimatedSection delay={0}>
+            <SettingsSection
+              icon={Clock}
+              title="learning preferences"
+              description="set your time budget and pacing preferences"
+            >
+              <LearningPreferencesForm
+                initialDailyMinutes={profile?.dailyMinutes || 20}
+                initialWeeklyHours={profile?.weeklyHours || 5}
+                initialPacingPreference={pacingPreference}
+              />
+            </SettingsSection>
+          </AnimatedSection>
+
+          {/* Accessibility */}
+          <AnimatedSection delay={0.1}>
+            <SettingsSection
+              icon={Eye}
+              title="accessibility"
+              description="customize how content is presented to you"
+            >
+              <AccessibilityForm
+                initialPreferredFormats={profile?.preferredFormats || []}
+                initialContentOrder={contentOrder}
+                initialUiToggles={profile?.uiToggles || []}
+              />
+            </SettingsSection>
+          </AnimatedSection>
+
+          {/* Application Settings */}
+          <AnimatedSection delay={0.2}>
+            <SettingsSection
+              icon={Zap}
+              title="application & evidence"
+              description="configure how you practice and track progress"
+            >
+              <ApplicationSettingsForm
+                initialApplicationFrequency={applicationFrequency}
+                initialTrackingPreference={trackingPreference}
+              />
+            </SettingsSection>
+          </AnimatedSection>
+
+          {/* Integrations */}
+          <AnimatedSection delay={0.3}>
+            <div className="card-elevated">
+              <h2
+                className="mb-4 text-xs font-medium uppercase tracking-wider"
+                style={{ color: "var(--text-muted)" }}
               >
-                <LearningPreferencesForm
-                  initialDailyMinutes={profile?.dailyMinutes || 20}
-                  initialWeeklyHours={profile?.weeklyHours || 5}
-                  initialPacingPreference={pacingPreference}
+                integrations
+              </h2>
+              <div className="space-y-3">
+                <SettingsLink
+                  href="/settings/github"
+                  icon={<Github className="h-6 w-6" style={{ color: "var(--accent-primary)" }} />}
+                  title="github"
+                  description={
+                    githubConnected
+                      ? "connected - manage your repositories"
+                      : "connect to import commits and prs as evidence"
+                  }
+                  badge={githubConnected ? "connected" : undefined}
                 />
-              </SettingsSection>
-            </AnimatedSection>
+              </div>
+            </div>
+          </AnimatedSection>
 
-            {/* Accessibility */}
-            <AnimatedSection delay={0.1}>
-              <SettingsSection
-                icon={Eye}
-                title="Accessibility"
-                description="Customize how content is presented to you"
+          {/* Account */}
+          <AnimatedSection delay={0.4}>
+            <div className="card-elevated">
+              <h2
+                className="mb-4 text-xs font-medium uppercase tracking-wider"
+                style={{ color: "var(--text-muted)" }}
               >
-                <AccessibilityForm
-                  initialPreferredFormats={profile?.preferredFormats || []}
-                  initialContentOrder={contentOrder}
-                  initialUiToggles={profile?.uiToggles || []}
-                />
-              </SettingsSection>
-            </AnimatedSection>
-
-            {/* Application Settings */}
-            <AnimatedSection delay={0.2}>
-              <SettingsSection
-                icon={Zap}
-                title="Application & Evidence"
-                description="Configure how you practice and track progress"
-              >
-                <ApplicationSettingsForm
-                  initialApplicationFrequency={applicationFrequency}
-                  initialTrackingPreference={trackingPreference}
-                />
-              </SettingsSection>
-            </AnimatedSection>
-
-            {/* Integrations */}
-            <AnimatedSection delay={0.3}>
-              <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-xl shadow-zinc-200/30">
-                <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-zinc-500">
-                  Integrations
-                </h2>
-                <div className="space-y-3">
-                  <SettingsLink
-                    href="/settings/github"
-                    icon={<Github className="h-6 w-6 text-zinc-600" />}
-                    title="GitHub"
-                    description={
-                      githubConnected
-                        ? "Connected - Manage your repositories"
-                        : "Connect to import commits and PRs as evidence"
-                    }
-                    badge={githubConnected ? "Connected" : undefined}
-                  />
+                account
+              </h2>
+              <div className="space-y-4">
+                <div
+                  className="flex items-center gap-4 rounded-xl p-4"
+                  style={{
+                    backgroundColor: "var(--bg-dark)",
+                    border: "1px solid rgba(255, 255, 255, 0.06)",
+                  }}
+                >
+                  <div className="icon-box flex-shrink-0">
+                    <User className="h-6 w-6" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-medium lowercase" style={{ color: "var(--text-white)" }}>
+                      {user.name?.toLowerCase() || "user"}
+                    </h3>
+                    <p className="mt-0.5 text-sm lowercase" style={{ color: "var(--text-gray)" }}>
+                      signed in with google
+                    </p>
+                  </div>
+                </div>
+                <div
+                  className="flex items-center gap-4 rounded-xl p-4"
+                  style={{
+                    backgroundColor: "var(--bg-dark)",
+                    border: "1px solid rgba(255, 255, 255, 0.06)",
+                  }}
+                >
+                  <div className="icon-box flex-shrink-0">
+                    <Mail className="h-6 w-6" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-medium lowercase" style={{ color: "var(--text-white)" }}>
+                      email
+                    </h3>
+                    <p className="mt-0.5 text-sm lowercase" style={{ color: "var(--text-gray)" }}>
+                      {user.email}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </AnimatedSection>
-
-            {/* Account */}
-            <AnimatedSection delay={0.4}>
-              <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-xl shadow-zinc-200/30">
-                <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-zinc-500">
-                  Account
-                </h2>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-zinc-200">
-                      <User className="h-6 w-6 text-zinc-600" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-medium text-zinc-900">
-                        {user.name || "User"}
-                      </h3>
-                      <p className="mt-0.5 text-sm text-zinc-500">
-                        Signed in with Google
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-zinc-200">
-                      <Mail className="h-6 w-6 text-zinc-600" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-medium text-zinc-900">Email</h3>
-                      <p className="mt-0.5 text-sm text-zinc-500">{user.email}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </AnimatedSection>
-          </div>
+            </div>
+          </AnimatedSection>
         </div>
       </div>
     </div>

@@ -2,8 +2,6 @@
 
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Check,
   Search,
@@ -81,31 +79,47 @@ export function RepositorySelector({
     JSON.stringify(initialSelectedRepos.sort());
 
   return (
-    <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-xl shadow-zinc-200/30 sm:p-8">
+    <div className="card-featured">
       <div className="mb-6">
-        <h3 className="text-lg font-medium text-zinc-900">Select Repositories</h3>
-        <p className="mt-1 text-sm text-zinc-500">
-          Choose which repositories you want to track. Commits and pull requests from
+        <h3 className="text-lg font-medium lowercase" style={{ color: "var(--text-white)" }}>
+          select repositories
+        </h3>
+        <p className="mt-1 text-sm lowercase" style={{ color: "var(--text-gray)" }}>
+          choose which repositories you want to track. commits and pull requests from
           selected repos can be imported as evidence.
         </p>
       </div>
 
       {/* Search */}
       <div className="relative mb-4">
-        <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-        <Input
-          placeholder="Search repositories..."
+        <Search
+          className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2"
+          style={{ color: "var(--text-muted)" }}
+        />
+        <input
+          placeholder="search repositories..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="h-12 rounded-xl border-zinc-200 pl-10 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/10"
+          className="h-12 w-full rounded-xl pl-10 pr-4 text-sm lowercase transition-all duration-300 placeholder:lowercase focus:outline-none"
+          style={{
+            backgroundColor: "var(--bg-dark)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            color: "var(--text-white)",
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = "var(--accent-primary)";
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)";
+          }}
         />
       </div>
 
       {/* Repository List */}
       <div className="max-h-96 space-y-2 overflow-y-auto">
         {filteredRepos.length === 0 ? (
-          <p className="py-8 text-center text-sm text-zinc-400">
-            {searchQuery ? "No repositories match your search" : "No repositories found"}
+          <p className="py-8 text-center text-sm lowercase" style={{ color: "var(--text-muted)" }}>
+            {searchQuery ? "no repositories match your search" : "no repositories found"}
           </p>
         ) : (
           filteredRepos.map((repo, index) => {
@@ -120,19 +134,23 @@ export function RepositorySelector({
                 whileHover={{ scale: 1.005 }}
                 whileTap={{ scale: 0.995 }}
                 onClick={() => toggleRepo(repo.fullName)}
-                className={`flex w-full items-start gap-4 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
-                  isSelected
-                    ? "border-zinc-900 bg-zinc-50"
-                    : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50"
-                }`}
+                className="flex w-full items-start gap-4 rounded-xl p-4 text-left transition-all duration-200"
+                style={{
+                  backgroundColor: isSelected ? "var(--accent-glow)" : "var(--bg-dark)",
+                  border: isSelected
+                    ? "1px solid var(--accent-primary)"
+                    : "1px solid rgba(255, 255, 255, 0.06)",
+                }}
               >
                 {/* Checkbox */}
                 <div
-                  className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border-2 transition-all ${
-                    isSelected
-                      ? "border-zinc-900 bg-zinc-900"
-                      : "border-zinc-300 bg-white"
-                  }`}
+                  className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg transition-all"
+                  style={{
+                    backgroundColor: isSelected ? "var(--accent-primary)" : "transparent",
+                    border: isSelected
+                      ? "2px solid var(--accent-primary)"
+                      : "2px solid rgba(255, 255, 255, 0.2)",
+                  }}
                 >
                   <AnimatePresence>
                     {isSelected && (
@@ -142,7 +160,7 @@ export function RepositorySelector({
                         exit={{ scale: 0 }}
                         transition={{ type: "spring", stiffness: 500, damping: 30 }}
                       >
-                        <Check className="h-4 w-4 text-white" />
+                        <Check className="h-4 w-4" style={{ color: "var(--bg-dark)" }} />
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -151,31 +169,42 @@ export function RepositorySelector({
                 {/* Repo Info */}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="font-medium text-zinc-900">{repo.name}</p>
+                    <p
+                      className="font-medium lowercase"
+                      style={{ color: isSelected ? "var(--accent-primary)" : "var(--text-white)" }}
+                    >
+                      {repo.name}
+                    </p>
                     {repo.private ? (
-                      <Lock className="h-3.5 w-3.5 text-zinc-400" />
+                      <Lock className="h-3.5 w-3.5" style={{ color: "var(--text-muted)" }} />
                     ) : (
-                      <Globe className="h-3.5 w-3.5 text-zinc-400" />
+                      <Globe className="h-3.5 w-3.5" style={{ color: "var(--text-muted)" }} />
                     )}
                   </div>
                   {repo.description && (
-                    <p className="mt-1 line-clamp-1 text-sm text-zinc-500">
+                    <p
+                      className="mt-1 line-clamp-1 text-sm lowercase"
+                      style={{ color: "var(--text-gray)" }}
+                    >
                       {repo.description}
                     </p>
                   )}
-                  <div className="mt-2 flex items-center gap-3 text-xs text-zinc-400">
+                  <div className="mt-2 flex items-center gap-3 text-xs" style={{ color: "var(--text-muted)" }}>
                     {repo.language && (
-                      <span className="flex items-center gap-1">
-                        <span className="h-2 w-2 rounded-full bg-zinc-400" />
+                      <span className="flex items-center gap-1 lowercase">
+                        <span
+                          className="h-2 w-2 rounded-full"
+                          style={{ backgroundColor: "var(--accent-primary)" }}
+                        />
                         {repo.language}
                       </span>
                     )}
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1 lowercase">
                       <GitBranch className="h-3 w-3" />
                       {repo.fullName.split("/")[0]}
                     </span>
-                    <span>
-                      Updated {new Date(repo.updatedAt).toLocaleDateString()}
+                    <span className="lowercase">
+                      updated {new Date(repo.updatedAt).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
@@ -192,7 +221,11 @@ export function RepositorySelector({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600"
+            className="mt-4 rounded-lg px-3 py-2 text-sm lowercase"
+            style={{
+              backgroundColor: "rgba(239, 68, 68, 0.15)",
+              color: "#ef4444",
+            }}
           >
             {error}
           </motion.p>
@@ -200,30 +233,33 @@ export function RepositorySelector({
       </AnimatePresence>
 
       {/* Footer */}
-      <div className="mt-6 flex items-center justify-between border-t border-zinc-100 pt-6">
-        <p className="text-sm text-zinc-500">
+      <div
+        className="mt-6 flex items-center justify-between border-t pt-6"
+        style={{ borderColor: "rgba(255, 255, 255, 0.06)" }}
+      >
+        <p className="text-sm lowercase" style={{ color: "var(--text-gray)" }}>
           {selectedRepos.length} {selectedRepos.length === 1 ? "repository" : "repositories"}{" "}
           selected
         </p>
-        <Button
+        <button
           onClick={handleSave}
           disabled={isSaving || (!hasChanges && !saveSuccess)}
-          className="h-12 rounded-xl bg-zinc-900 px-6 font-medium shadow-lg shadow-zinc-900/20 transition-all duration-200 hover:bg-zinc-800 hover:shadow-xl hover:shadow-zinc-900/25 disabled:opacity-50"
+          className="btn-accent disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isSaving ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
+              <Loader2 className="h-4 w-4 animate-spin" />
+              saving...
             </>
           ) : saveSuccess ? (
             <>
-              <CheckCircle2 className="mr-2 h-4 w-4" />
-              Saved!
+              <CheckCircle2 className="h-4 w-4" />
+              saved!
             </>
           ) : (
-            "Save Selection"
+            "save selection"
           )}
-        </Button>
+        </button>
       </div>
     </div>
   );

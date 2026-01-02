@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { Github, Settings } from "lucide-react";
+import Link from "next/link";
+import { Github, Settings, ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import { auth } from "@/lib/auth/auth";
 import { prisma } from "@/lib/db/prisma";
@@ -9,6 +10,8 @@ import { GitHubClient } from "@/lib/github/client";
 import { RepositorySelector } from "./RepositorySelector";
 import { ConnectGitHubButton } from "./ConnectGitHubButton";
 import { DisconnectGitHubButton } from "./DisconnectGitHubButton";
+import { Logo } from "@/components/brand";
+import { AccessibilityToolbar } from "@/components/accessibility/AccessibilityToolbar";
 
 export const metadata: Metadata = {
   title: "GitHub Settings | AI Learning Lab",
@@ -38,14 +41,19 @@ async function GitHubSettingsContent() {
   // If not connected, show connect button
   if (!user.githubConn) {
     return (
-      <div className="rounded-3xl border border-zinc-200/80 bg-white p-8 text-center shadow-xl shadow-zinc-200/30">
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-zinc-100">
-          <Github className="h-8 w-8 text-zinc-400" />
+      <div className="card-featured text-center">
+        <div
+          className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl"
+          style={{ backgroundColor: "var(--bg-dark)" }}
+        >
+          <Github className="h-8 w-8" style={{ color: "var(--text-muted)" }} />
         </div>
-        <h3 className="text-xl font-medium text-zinc-900">Connect GitHub</h3>
-        <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-zinc-500">
-          Connect your GitHub account to import commits and pull requests as evidence of your learning.
-          Your code contributions become verifiable proof of progress.
+        <h3 className="text-xl font-medium lowercase" style={{ color: "var(--text-white)" }}>
+          connect github
+        </h3>
+        <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed lowercase" style={{ color: "var(--text-gray)" }}>
+          connect your github account to import commits and pull requests as evidence of your learning.
+          your code contributions become verifiable proof of progress.
         </p>
         <div className="mt-6">
           <ConnectGitHubButton />
@@ -64,21 +72,32 @@ async function GitHubSettingsContent() {
     repos = await client.listRepos();
   } catch (error) {
     console.error("Error fetching repos:", error);
-    fetchError = "Failed to fetch repositories. Your GitHub connection may have expired.";
+    fetchError = "failed to fetch repositories. your github connection may have expired.";
   }
 
   return (
     <div className="space-y-6">
       {/* Connection Status */}
-      <div className="flex items-center justify-between rounded-2xl border border-green-200 bg-green-50 p-4">
+      <div
+        className="flex items-center justify-between rounded-xl p-4"
+        style={{
+          backgroundColor: "rgba(34, 197, 94, 0.1)",
+          border: "1px solid rgba(34, 197, 94, 0.2)",
+        }}
+      >
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100">
-            <Github className="h-5 w-5 text-green-600" />
+          <div
+            className="flex h-10 w-10 items-center justify-center rounded-xl"
+            style={{ backgroundColor: "rgba(34, 197, 94, 0.15)" }}
+          >
+            <Github className="h-5 w-5" style={{ color: "#22c55e" }} />
           </div>
           <div>
-            <p className="font-medium text-green-900">GitHub Connected</p>
-            <p className="text-sm text-green-700">
-              Connected {new Date(user.githubConn.connectedAt).toLocaleDateString()}
+            <p className="font-medium lowercase" style={{ color: "#22c55e" }}>
+              github connected
+            </p>
+            <p className="text-sm lowercase" style={{ color: "rgba(34, 197, 94, 0.8)" }}>
+              connected {new Date(user.githubConn.connectedAt).toLocaleDateString()}
             </p>
           </div>
         </div>
@@ -87,10 +106,16 @@ async function GitHubSettingsContent() {
 
       {/* Repository Selector */}
       {fetchError ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center">
-          <p className="text-red-700">{fetchError}</p>
+        <div
+          className="rounded-xl p-6 text-center"
+          style={{
+            backgroundColor: "rgba(239, 68, 68, 0.1)",
+            border: "1px solid rgba(239, 68, 68, 0.2)",
+          }}
+        >
+          <p className="lowercase" style={{ color: "#ef4444" }}>{fetchError}</p>
           <div className="mt-4">
-            <ConnectGitHubButton label="Reconnect GitHub" />
+            <ConnectGitHubButton label="reconnect github" />
           </div>
         </div>
       ) : (
@@ -106,8 +131,8 @@ async function GitHubSettingsContent() {
 function LoadingSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="h-20 animate-pulse rounded-2xl bg-zinc-100" />
-      <div className="h-96 animate-pulse rounded-3xl bg-zinc-100" />
+      <div className="skeleton h-20 rounded-xl" />
+      <div className="skeleton h-96 rounded-xl" />
     </div>
   );
 }
@@ -116,60 +141,106 @@ export default async function GitHubSettingsPage({ searchParams }: PageProps) {
   const params = await searchParams;
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-zinc-50 via-white to-zinc-100">
-      {/* Background pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.05),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]" />
+    <div className="landing-page">
+      {/* Background effects */}
+      <div className="noise-overlay decorative-bg" data-decorative="true" />
+      <div className="hero-gradient" data-decorative="true" style={{ opacity: 0.3 }} />
 
-      {/* Content */}
-      <div className="relative py-8 sm:py-12">
-        <div className="container mx-auto max-w-3xl px-4 sm:px-6">
+      {/* Skip link */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:px-4 focus:py-2 focus:text-sm focus:font-medium"
+        style={{
+          backgroundColor: "var(--accent-primary)",
+          color: "var(--bg-dark)",
+        }}
+      >
+        skip to main content
+      </a>
+
+      {/* Header */}
+      <header className="relative">
+        <div
+          className="container mx-auto flex items-center justify-between px-6"
+          style={{ height: "var(--space-10)" }}
+        >
+          <Link
+            href="/dashboard/settings"
+            className="btn-outline group animate-fade-in-up"
+          >
+            <ArrowLeft className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-1" />
+            back to settings
+          </Link>
+          <div className="animate-fade-in-up animate-delay-1">
+            <AccessibilityToolbar />
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main
+        id="main-content"
+        className="relative"
+        style={{ paddingTop: "var(--space-8)", paddingBottom: "var(--space-12)" }}
+      >
+        <div className="container mx-auto max-w-3xl px-6">
           {/* Header */}
-          <div className="mb-8 sm:mb-10">
+          <div className="mb-10 animate-fade-in-up">
             <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-900">
-                <Settings className="h-6 w-6 text-white" />
+              <div className="icon-box">
+                <Github className="h-6 w-6" />
               </div>
-              <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600">
-                Settings
-              </span>
+              <span className="text-eyebrow">integration</span>
             </div>
-            <h1 className="text-3xl font-medium tracking-tight text-zinc-900 sm:text-4xl">
-              GitHub Integration
-            </h1>
-            <p className="mt-2 text-base leading-relaxed text-zinc-500">
-              Connect your GitHub account and select repositories to track for evidence
+            <h1 className="text-section-title">github integration</h1>
+            <p className="text-body mt-2">
+              connect your github account and select repositories to track for evidence
             </p>
           </div>
 
           {/* Status Messages */}
           {params.error && (
-            <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4">
-              <p className="text-sm text-red-700">
+            <div
+              className="mb-6 rounded-xl p-4 animate-fade-in-up"
+              style={{
+                backgroundColor: "rgba(239, 68, 68, 0.1)",
+                border: "1px solid rgba(239, 68, 68, 0.2)",
+              }}
+            >
+              <p className="text-sm lowercase" style={{ color: "#ef4444" }}>
                 {params.error === "oauth_error"
-                  ? "GitHub authorization was cancelled or failed."
+                  ? "github authorization was cancelled or failed."
                   : params.error === "invalid_state"
-                  ? "Security validation failed. Please try again."
+                  ? "security validation failed. please try again."
                   : params.error === "token_exchange"
-                  ? "Failed to complete GitHub connection. Please try again."
-                  : "An error occurred. Please try again."}
+                  ? "failed to complete github connection. please try again."
+                  : "an error occurred. please try again."}
               </p>
             </div>
           )}
 
           {params.success === "connected" && (
-            <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 p-4">
-              <p className="text-sm text-green-700">
-                GitHub connected successfully! Select the repositories you want to track below.
+            <div
+              className="mb-6 rounded-xl p-4 animate-fade-in-up"
+              style={{
+                backgroundColor: "rgba(34, 197, 94, 0.1)",
+                border: "1px solid rgba(34, 197, 94, 0.2)",
+              }}
+            >
+              <p className="text-sm lowercase" style={{ color: "#22c55e" }}>
+                github connected successfully! select the repositories you want to track below.
               </p>
             </div>
           )}
 
           {/* Content */}
-          <Suspense fallback={<LoadingSkeleton />}>
-            <GitHubSettingsContent />
-          </Suspense>
+          <div className="animate-fade-in-up animate-delay-1">
+            <Suspense fallback={<LoadingSkeleton />}>
+              <GitHubSettingsContent />
+            </Suspense>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

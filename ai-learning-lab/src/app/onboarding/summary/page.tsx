@@ -8,17 +8,16 @@ import {
   Target,
   Route,
   Settings,
-  Sparkles,
   XCircle,
   ArrowRight,
   Pencil,
   AlertCircle,
   CheckCircle2,
-  Clock,
   BookOpen,
   Lightbulb,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Logo, LogoAnimated } from "@/components/brand";
+import { AccessibilityToolbar } from "@/components/accessibility/AccessibilityToolbar";
 import { confirmAndContinue } from "./actions";
 
 interface SectionData {
@@ -26,6 +25,8 @@ interface SectionData {
   content: string[];
   icon: React.ReactNode;
   color: string;
+  bgColor: string;
+  borderColor: string;
 }
 
 function parseSummaryToSections(markdown: string): SectionData[] {
@@ -34,30 +35,42 @@ function parseSummaryToSections(markdown: string): SectionData[] {
   // Split by ## headers
   const parts = markdown.split(/^## /m).filter(Boolean);
 
-  const iconMap: Record<string, { icon: React.ReactNode; color: string }> = {
+  const iconMap: Record<string, { icon: React.ReactNode; color: string; bgColor: string; borderColor: string }> = {
     "Who You Are": {
       icon: <User className="h-5 w-5" />,
-      color: "bg-blue-100 text-blue-600 border-blue-200"
+      color: "#60a5fa",
+      bgColor: "rgba(96, 165, 250, 0.1)",
+      borderColor: "rgba(96, 165, 250, 0.2)"
     },
     "What You Want to Achieve": {
       icon: <Target className="h-5 w-5" />,
-      color: "bg-emerald-100 text-emerald-600 border-emerald-200"
+      color: "#34d399",
+      bgColor: "rgba(52, 211, 153, 0.1)",
+      borderColor: "rgba(52, 211, 153, 0.2)"
     },
     "How We'll Design Your Learning Path": {
       icon: <Route className="h-5 w-5" />,
-      color: "bg-violet-100 text-violet-600 border-violet-200"
+      color: "#a78bfa",
+      bgColor: "rgba(167, 139, 250, 0.1)",
+      borderColor: "rgba(167, 139, 250, 0.2)"
     },
     "Learning Comfort Defaults": {
       icon: <Settings className="h-5 w-5" />,
-      color: "bg-amber-100 text-amber-600 border-amber-200"
+      color: "#fbbf24",
+      bgColor: "rgba(251, 191, 36, 0.1)",
+      borderColor: "rgba(251, 191, 36, 0.2)"
     },
     "What We'll Emphasize": {
-      icon: <Sparkles className="h-5 w-5" />,
-      color: "bg-emerald-100 text-emerald-600 border-emerald-200"
+      icon: <LogoAnimated className="h-5 w-5" />,
+      color: "var(--accent-primary)",
+      bgColor: "var(--accent-glow)",
+      borderColor: "rgba(203, 254, 0, 0.2)"
     },
     "What We'll Skip or Minimize": {
       icon: <XCircle className="h-5 w-5" />,
-      color: "bg-zinc-100 text-zinc-600 border-zinc-200"
+      color: "var(--text-gray)",
+      bgColor: "var(--bg-dark)",
+      borderColor: "rgba(255, 255, 255, 0.06)"
     },
   };
 
@@ -77,7 +90,9 @@ function parseSummaryToSections(markdown: string): SectionData[] {
 
     const iconConfig = iconMap[title] || {
       icon: <BookOpen className="h-5 w-5" />,
-      color: "bg-zinc-100 text-zinc-600 border-zinc-200"
+      color: "var(--text-gray)",
+      bgColor: "var(--bg-dark)",
+      borderColor: "rgba(255, 255, 255, 0.06)"
     };
 
     sections.push({
@@ -85,6 +100,8 @@ function parseSummaryToSections(markdown: string): SectionData[] {
       content,
       icon: iconConfig.icon,
       color: iconConfig.color,
+      bgColor: iconConfig.bgColor,
+      borderColor: iconConfig.borderColor,
     });
   }
 
@@ -103,29 +120,35 @@ function SectionCard({ section, index }: { section: SectionData; index: number }
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.1 }}
-      className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm hover:shadow-md transition-shadow duration-200"
+      className="card-dark p-5 transition-all duration-300"
     >
       <div className="flex items-start gap-4">
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${section.color}`}>
-          {section.icon}
+        <div
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+          style={{ backgroundColor: section.bgColor }}
+        >
+          <div style={{ color: section.color }}>{section.icon}</div>
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-base font-semibold text-zinc-900 mb-2">
-            {section.title}
+          <h3
+            className="text-base font-semibold lowercase mb-2"
+            style={{ color: "var(--text-white)" }}
+          >
+            {section.title.toLowerCase()}
           </h3>
           {isBulletList ? (
             <ul className="space-y-2">
               {section.content.map((item, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-zinc-600">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
-                  <span>{item}</span>
+                <li key={i} className="flex items-start gap-2 text-sm lowercase">
+                  <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#22c55e" }} />
+                  <span style={{ color: "var(--text-gray)" }}>{item}</span>
                 </li>
               ))}
             </ul>
           ) : (
             <div className="space-y-2">
               {section.content.map((paragraph, i) => (
-                <p key={i} className="text-sm leading-relaxed text-zinc-600">
+                <p key={i} className="text-sm leading-relaxed lowercase" style={{ color: "var(--text-gray)" }}>
                   {paragraph}
                 </p>
               ))}
@@ -140,10 +163,19 @@ function SectionCard({ section, index }: { section: SectionData; index: number }
 // Loading fallback component
 function SummaryLoading() {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-zinc-50 via-white to-zinc-100">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.05),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]" />
+    <div className="landing-page">
+      <div className="noise-overlay decorative-bg" data-decorative="true" />
+      <div className="hero-gradient" data-decorative="true" style={{ opacity: 0.3 }} />
       <div className="relative flex min-h-screen items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-zinc-200 border-t-zinc-900" />
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+          className="h-12 w-12 rounded-full border-4"
+          style={{
+            borderColor: "rgba(255, 255, 255, 0.1)",
+            borderTopColor: "var(--accent-primary)",
+          }}
+        />
       </div>
     </div>
   );
@@ -217,31 +249,31 @@ function SummaryContent() {
 
   if (error) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-zinc-50 via-white to-zinc-100">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.05),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]" />
+      <div className="landing-page">
+        <div className="noise-overlay decorative-bg" data-decorative="true" />
+        <div className="hero-gradient" data-decorative="true" style={{ opacity: 0.3 }} />
 
-        <div className="relative flex min-h-screen items-center justify-center px-4 py-12">
+        <div className="relative flex min-h-screen items-center justify-center px-6 py-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="w-full max-w-lg"
           >
-            <div className="rounded-3xl border border-red-200 bg-white p-8 shadow-xl shadow-red-100/50">
-              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-100">
-                <AlertCircle className="h-7 w-7 text-red-600" />
-              </div>
-              <h2 className="text-2xl font-medium tracking-tight text-zinc-900">
-                Something went wrong
-              </h2>
-              <p className="mt-3 text-base leading-relaxed text-zinc-500">
-                {error}
-              </p>
-              <Button
-                onClick={handleEdit}
-                className="mt-6 h-14 w-full rounded-2xl bg-zinc-900 text-base font-medium shadow-lg shadow-zinc-900/20 transition-all duration-200 hover:bg-zinc-800 hover:shadow-xl hover:shadow-zinc-900/25"
+            <div
+              className="card-dark p-8"
+              style={{ borderColor: "rgba(239, 68, 68, 0.3)" }}
+            >
+              <div
+                className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl"
+                style={{ backgroundColor: "rgba(239, 68, 68, 0.15)" }}
               >
-                Return to Questionnaire
-              </Button>
+                <AlertCircle className="h-7 w-7" style={{ color: "#ef4444" }} />
+              </div>
+              <h2 className="text-section-title mb-2">something went wrong</h2>
+              <p className="text-body mb-6">{error}</p>
+              <button onClick={handleEdit} className="btn-accent w-full">
+                return to questionnaire
+              </button>
             </div>
           </motion.div>
         </div>
@@ -250,39 +282,59 @@ function SummaryContent() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-zinc-50 via-white to-zinc-100">
-      {/* Subtle background pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.05),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]" />
+    <div className="landing-page">
+      {/* Background effects */}
+      <div className="noise-overlay decorative-bg" data-decorative="true" />
+      <div className="hero-gradient" data-decorative="true" style={{ opacity: 0.3 }} />
 
-      <div className="relative py-8 sm:py-12">
-        <div className="container mx-auto max-w-3xl px-4 sm:px-6">
+      {/* Header */}
+      <header className="relative">
+        <div
+          className="container mx-auto flex items-center justify-between px-6"
+          style={{ height: "var(--space-10)" }}
+        >
+          <Logo size="md" className="animate-fade-in-up" />
+          <div className="animate-fade-in-up animate-delay-1">
+            <AccessibilityToolbar />
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="relative" style={{ paddingTop: "var(--space-8)", paddingBottom: "var(--space-12)" }}>
+        <div className="container mx-auto max-w-3xl px-6">
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="mb-8 text-center sm:mb-10"
+            className="mb-10 text-center"
           >
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-zinc-900 px-4 py-2">
-              <Sparkles className="h-4 w-4 text-white" />
-              <span className="text-sm font-medium text-white">
-                Your Learning Contract
+            <div
+              className="mb-4 inline-flex items-center gap-2 rounded-full px-4 py-2"
+              style={{
+                backgroundColor: "var(--accent-glow)",
+              }}
+            >
+              <LogoAnimated className="h-4 w-4" />
+              <span className="text-sm font-medium lowercase" style={{ color: "var(--accent-primary)" }}>
+                your learning contract
               </span>
             </div>
-            <h1 className="text-3xl font-medium tracking-tight text-zinc-900 sm:text-4xl">
+            <h1 className="text-section-title">
               {isLoading ? (
-                "Creating your personalized plan..."
+                "creating your personalized plan..."
               ) : (
                 <>
-                  Your <span className="text-zinc-600">{topicName}</span>{" "}
-                  Journey
+                  your <span style={{ color: "var(--accent-primary)" }}>{topicName?.toLowerCase()}</span>{" "}
+                  journey
                 </>
               )}
             </h1>
-            <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-zinc-500">
+            <p className="text-body mx-auto mt-3 max-w-xl">
               {isLoading
-                ? "We're analyzing your preferences to design the perfect learning experience."
-                : "Here's how we understood your needs. Review and confirm to continue."}
+                ? "we're analyzing your preferences to design the perfect learning experience."
+                : "here's how we understood your needs. review and confirm to continue."}
             </p>
           </motion.div>
 
@@ -295,15 +347,15 @@ function SummaryContent() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: i * 0.1 }}
-                  className="rounded-2xl border border-zinc-200/80 bg-white p-5"
+                  className="card-dark p-5"
                 >
                   <div className="flex items-start gap-4">
-                    <div className="h-10 w-10 animate-pulse rounded-xl bg-zinc-100" />
+                    <div className="skeleton h-10 w-10 rounded-xl" />
                     <div className="flex-1 space-y-3">
-                      <div className="h-5 w-48 animate-pulse rounded-lg bg-zinc-100" />
+                      <div className="skeleton h-5 w-48 rounded-lg" />
                       <div className="space-y-2">
-                        <div className="h-4 w-full animate-pulse rounded-lg bg-zinc-100" />
-                        <div className="h-4 w-3/4 animate-pulse rounded-lg bg-zinc-100" />
+                        <div className="skeleton h-4 w-full rounded-lg" />
+                        <div className="skeleton h-4 w-3/4 rounded-lg" />
                       </div>
                     </div>
                   </div>
@@ -324,19 +376,29 @@ function SummaryContent() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.6 }}
-              className="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-5"
+              className="mt-8 rounded-xl p-5"
+              style={{
+                backgroundColor: "rgba(34, 197, 94, 0.1)",
+                border: "1px solid rgba(34, 197, 94, 0.2)",
+              }}
             >
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100">
-                  <Lightbulb className="h-5 w-5 text-emerald-600" />
+                <div
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+                  style={{ backgroundColor: "rgba(34, 197, 94, 0.15)" }}
+                >
+                  <Lightbulb className="h-5 w-5" style={{ color: "#22c55e" }} />
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold text-emerald-900">
-                    Ready to start learning?
+                  <h3
+                    className="text-base font-semibold lowercase"
+                    style={{ color: "#22c55e" }}
+                  >
+                    ready to start learning?
                   </h3>
-                  <p className="mt-1 text-sm text-emerald-700">
-                    If this looks right, confirm to generate your personalized learning path.
-                    You can always adjust your preferences later.
+                  <p className="mt-1 text-sm lowercase" style={{ color: "rgba(34, 197, 94, 0.8)" }}>
+                    if this looks right, confirm to generate your personalized learning path.
+                    you can always adjust your preferences later.
                   </p>
                 </div>
               </div>
@@ -350,10 +412,10 @@ function SummaryContent() {
             transition={{ duration: 0.5, delay: 0.7 }}
             className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center"
           >
-            <Button
+            <button
               onClick={handleConfirm}
               disabled={isLoading || isPending}
-              className="group h-14 rounded-2xl bg-zinc-900 px-8 text-base font-medium shadow-lg shadow-zinc-900/20 transition-all duration-200 hover:bg-zinc-800 hover:shadow-xl hover:shadow-zinc-900/25 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-1 sm:max-w-xs"
+              className="btn-accent group sm:flex-1 sm:max-w-xs disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoading ? (
                 <span className="flex items-center gap-2">
@@ -364,9 +426,13 @@ function SummaryContent() {
                       duration: 1,
                       ease: "linear",
                     }}
-                    className="h-5 w-5 rounded-full border-2 border-white/30 border-t-white"
+                    className="h-5 w-5 rounded-full border-2"
+                    style={{
+                      borderColor: "rgba(0, 0, 0, 0.3)",
+                      borderTopColor: "var(--bg-dark)",
+                    }}
                   />
-                  Please wait...
+                  please wait...
                 </span>
               ) : isPending ? (
                 <span className="flex items-center gap-2">
@@ -377,26 +443,29 @@ function SummaryContent() {
                       duration: 1,
                       ease: "linear",
                     }}
-                    className="h-5 w-5 rounded-full border-2 border-white/30 border-t-white"
+                    className="h-5 w-5 rounded-full border-2"
+                    style={{
+                      borderColor: "rgba(0, 0, 0, 0.3)",
+                      borderTopColor: "var(--bg-dark)",
+                    }}
                   />
-                  Creating your path...
+                  creating your path...
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
-                  Confirm & Generate Path
+                  confirm & generate path
                   <ArrowRight className="h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
                 </span>
               )}
-            </Button>
-            <Button
+            </button>
+            <button
               onClick={handleEdit}
-              variant="outline"
               disabled={isLoading || isPending}
-              className="h-14 rounded-2xl border-2 border-zinc-200 px-8 text-base font-medium transition-all duration-200 hover:border-zinc-300 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-1 sm:max-w-xs"
+              className="btn-outline sm:flex-1 sm:max-w-xs disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <Pencil className="mr-2 h-5 w-5" />
-              Edit My Answers
-            </Button>
+              <Pencil className="h-5 w-5" />
+              edit my answers
+            </button>
           </motion.div>
 
           {/* Helper Text */}
@@ -404,13 +473,14 @@ function SummaryContent() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.8 }}
-            className="mt-6 text-center text-sm text-zinc-400"
+            className="mt-6 text-center text-sm lowercase"
+            style={{ color: "var(--text-muted)" }}
           >
-            Review the summary above. If something doesn&apos;t look right,
+            review the summary above. if something doesn&apos;t look right,
             go back and update your answers.
           </motion.p>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

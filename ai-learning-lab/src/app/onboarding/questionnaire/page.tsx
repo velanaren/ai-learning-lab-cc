@@ -6,6 +6,8 @@ import {
   getCategoryOptions,
   type TopicCategory,
 } from "@/lib/config/topic-categories";
+import { Logo } from "@/components/brand";
+import { AccessibilityToolbar } from "@/components/accessibility/AccessibilityToolbar";
 
 interface QuestionnairePageProps {
   searchParams: Promise<{ topicId?: string }>;
@@ -45,31 +47,58 @@ export default async function QuestionnairePage({
   const categoryOptions = getCategoryOptions(category);
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-zinc-50 via-white to-zinc-100">
-      {/* Subtle background pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.05),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]" />
+    <div className="landing-page">
+      {/* Background effects */}
+      <div className="noise-overlay decorative-bg" data-decorative="true" />
+      <div className="hero-gradient" data-decorative="true" style={{ opacity: 0.3 }} />
 
-      <div className="relative py-8 sm:py-12">
+      {/* Skip to main content - Accessibility */}
+      <a
+        href="#questionnaire-form"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:px-4 focus:py-2 focus:text-sm focus:font-medium"
+        style={{
+          backgroundColor: "var(--accent-primary)",
+          color: "var(--bg-dark)",
+        }}
+      >
+        skip to questionnaire
+      </a>
+
+      {/* Header */}
+      <header className="relative">
+        <div
+          className="container mx-auto flex items-center justify-between px-6"
+          style={{ height: "var(--space-10)" }}
+        >
+          <Logo size="md" className="animate-fade-in-up" />
+          <div className="animate-fade-in-up animate-delay-1">
+            <AccessibilityToolbar />
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="relative" style={{ paddingTop: "var(--space-8)", paddingBottom: "var(--space-12)" }}>
         <div className="container mx-auto">
-          {/* Header */}
-          <div className="mb-8 text-center sm:mb-12">
-            <p className="mb-2 text-sm font-medium uppercase tracking-wider text-zinc-500">
-              Personalize Your Learning
-            </p>
-            <h1 className="text-3xl font-medium tracking-tight text-zinc-900 sm:text-4xl">
-              Let&apos;s customize your{" "}
-              <span className="text-zinc-600">{topic.name}</span> journey
+          {/* Page Header */}
+          <div className="mb-10 text-center animate-fade-in-up">
+            <span className="text-eyebrow">personalize your learning</span>
+            <h1 className="text-section-title mt-4">
+              let&apos;s customize your{" "}
+              <span style={{ color: "var(--accent-primary)" }}>{topic.name.toLowerCase()}</span> journey
             </h1>
-            <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-zinc-500">
-              Answer a few questions to create your tailored learning path.
-              This helps us understand how you learn best.
+            <p className="text-body mx-auto mt-4 max-w-xl">
+              answer a few questions to create your tailored learning path.
+              this helps us understand how you learn best.
             </p>
           </div>
 
           {/* Questionnaire Form */}
-          <QuestionnaireForm categoryOptions={categoryOptions} topicId={topic.id} />
+          <div id="questionnaire-form">
+            <QuestionnaireForm categoryOptions={categoryOptions} topicId={topic.id} />
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

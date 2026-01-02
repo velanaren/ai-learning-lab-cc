@@ -10,18 +10,16 @@ import {
   Lightbulb,
   ArrowRight,
   ArrowLeft,
-  Sparkles,
   CheckCircle,
   Eye,
   GraduationCap,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CodeBlock } from "@/components/ui/code-block";
 import { DayNavigation } from "@/components/learning/DayNavigation";
 import { ReflectionSection } from "@/components/learning/ReflectionSection";
 import { ApplicationSection } from "@/components/learning/ApplicationSection";
 import { CompleteDayButton } from "@/components/learning/CompleteDayButton";
+import { LogoAnimated } from "@/components/brand";
 import Link from "next/link";
 import type { DLUContent, DLUApplicationMoment } from "@/lib/gemini/prompts";
 
@@ -101,33 +99,31 @@ export default function TopicTodayPage() {
   // Needs onboarding state
   if (needsOnboarding) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-zinc-50 via-white to-zinc-100">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.05),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]" />
-        <div className="relative py-8 sm:py-12">
-          <div className="container mx-auto max-w-2xl px-4 sm:px-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="rounded-3xl border border-zinc-200/80 bg-white p-8 text-center shadow-xl shadow-zinc-200/30 sm:p-12"
+      <div className="relative" style={{ paddingTop: "var(--space-8)", paddingBottom: "var(--space-12)" }}>
+        <div className="hero-gradient" data-decorative="true" style={{ opacity: 0.1 }} />
+        <div className="container mx-auto max-w-2xl px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="card-featured text-center"
+          >
+            <div className="mb-6 flex justify-center">
+              <LogoAnimated className="h-20 w-20" />
+            </div>
+            <h2 className="text-section-title mb-4">
+              complete your learning setup
+            </h2>
+            <p className="text-body mb-8">
+              finish setting up this topic to start your learning journey.
+            </p>
+            <button
+              onClick={() => router.push(`/onboarding/graph?topicId=${topicId}`)}
+              className="btn-accent"
             >
-              <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-zinc-100">
-                <Sparkles className="h-8 w-8 text-zinc-600" />
-              </div>
-              <h2 className="text-2xl font-medium tracking-tight text-zinc-900">
-                Complete Your Learning Setup
-              </h2>
-              <p className="mt-3 text-base leading-relaxed text-zinc-500">
-                Finish setting up this topic to start your learning journey.
-              </p>
-              <Button
-                onClick={() => router.push(`/onboarding/graph?topicId=${topicId}`)}
-                className="group mt-8 h-14 rounded-2xl bg-zinc-900 px-8 text-base font-medium shadow-lg shadow-zinc-900/20 transition-all duration-200 hover:bg-zinc-800 hover:shadow-xl hover:shadow-zinc-900/25"
-              >
-                Continue Setup
-                <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
-              </Button>
-            </motion.div>
-          </div>
+              continue setup
+              <ArrowRight className="h-5 w-5" />
+            </button>
+          </motion.div>
         </div>
       </div>
     );
@@ -136,42 +132,34 @@ export default function TopicTodayPage() {
   // Error state
   if (error) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-zinc-50 via-white to-zinc-100">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.05),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]" />
-        <div className="relative py-8 sm:py-12">
-          <div className="container mx-auto max-w-2xl px-4 sm:px-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="rounded-3xl border border-red-200 bg-white p-8 shadow-xl shadow-red-100/50"
+      <div className="relative" style={{ paddingTop: "var(--space-8)", paddingBottom: "var(--space-12)" }}>
+        <div className="container mx-auto max-w-2xl px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="card-dark p-8"
+            style={{ borderColor: "rgba(239, 68, 68, 0.3)" }}
+          >
+            <div
+              className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl"
+              style={{ backgroundColor: "rgba(239, 68, 68, 0.15)" }}
             >
-              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-100">
-                <AlertCircle className="h-7 w-7 text-red-600" />
-              </div>
-              <h2 className="text-2xl font-medium tracking-tight text-zinc-900">
-                Something went wrong
-              </h2>
-              <p className="mt-3 text-base leading-relaxed text-zinc-500">
-                {error}
-              </p>
-              <div className="mt-6 flex gap-3">
-                <Button
-                  onClick={() => window.location.reload()}
-                  className="h-14 rounded-2xl bg-zinc-900 px-8 text-base font-medium shadow-lg shadow-zinc-900/20"
-                >
-                  Try Again
-                </Button>
-                <Link href="/dashboard">
-                  <Button
-                    variant="outline"
-                    className="h-14 rounded-2xl border-2 border-zinc-200 px-8 text-base font-medium"
-                  >
-                    Back to Dashboard
-                  </Button>
-                </Link>
-              </div>
-            </motion.div>
-          </div>
+              <AlertCircle className="h-7 w-7" style={{ color: "#ef4444" }} />
+            </div>
+            <h2 className="text-section-title mb-2">something went wrong</h2>
+            <p className="text-body mb-6">{error}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => window.location.reload()}
+                className="btn-accent"
+              >
+                try again
+              </button>
+              <Link href="/dashboard" className="btn-outline">
+                back to dashboard
+              </Link>
+            </div>
+          </motion.div>
         </div>
       </div>
     );
@@ -180,30 +168,24 @@ export default function TopicTodayPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-zinc-50 via-white to-zinc-100">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.05),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]" />
-        <div className="relative py-8 sm:py-12">
-          <div className="container mx-auto max-w-3xl px-4 sm:px-6">
-            {/* Header skeleton */}
-            <div className="mb-8 sm:mb-10">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="h-12 w-12 animate-pulse rounded-2xl bg-zinc-200" />
-                <div className="h-6 w-24 animate-pulse rounded-full bg-zinc-100" />
-              </div>
-              <div className="h-10 w-64 animate-pulse rounded-lg bg-zinc-100" />
+      <div className="relative" style={{ paddingTop: "var(--space-8)", paddingBottom: "var(--space-12)" }}>
+        <div className="container mx-auto max-w-3xl px-6">
+          {/* Header skeleton */}
+          <div className="mb-10">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="skeleton h-12 w-12 rounded-xl" />
+              <div className="skeleton h-6 w-24 rounded-full" />
             </div>
-
-            {/* Navigation skeleton */}
-            <div className="mb-8 h-24 animate-pulse rounded-2xl bg-zinc-100" />
-
-            {/* Content skeletons */}
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="mb-6 h-64 animate-pulse rounded-3xl bg-zinc-100"
-              />
-            ))}
+            <div className="skeleton h-10 w-64 rounded-lg" />
           </div>
+
+          {/* Navigation skeleton */}
+          <div className="skeleton mb-8 h-24 rounded-xl" />
+
+          {/* Content skeletons */}
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="skeleton mb-6 h-64 rounded-xl" />
+          ))}
         </div>
       </div>
     );
@@ -214,272 +196,313 @@ export default function TopicTodayPage() {
   const completedDays = dlu.isCompleted ? dlu.dayIndex : dlu.dayIndex - 1;
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-zinc-50 via-white to-zinc-100">
-      {/* Background pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.05),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]" />
+    <div className="relative" style={{ paddingTop: "var(--space-8)", paddingBottom: "var(--space-12)" }}>
+      {/* Hero gradient */}
+      <div className="hero-gradient" data-decorative="true" style={{ opacity: 0.1 }} />
 
-      {/* Content */}
-      <div className="relative py-8 sm:py-12">
-        <div className="container mx-auto max-w-3xl px-4 sm:px-6">
-          {/* Back to Dashboard */}
-          <Link
-            href="/dashboard"
-            className="mb-6 inline-flex items-center gap-2 text-sm text-zinc-500 transition-colors hover:text-zinc-700"
+      <div className="container mx-auto max-w-3xl px-6">
+        {/* Back to Dashboard */}
+        <Link
+          href="/dashboard"
+          className="mb-6 inline-flex items-center gap-2 text-sm lowercase transition-colors hover:text-[var(--accent-primary)]"
+          style={{ color: "var(--text-muted)" }}
+        >
+          <ArrowLeft className="h-4 w-4" />
+          back to dashboard
+        </Link>
+
+        {/* Page Header */}
+        <div className="mb-10 animate-fade-in-up">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="icon-box">
+              <GraduationCap className="h-6 w-6" />
+            </div>
+            <span className="text-eyebrow">{dlu.topicName.toLowerCase()}</span>
+          </div>
+          <h1 className="text-section-title">today&apos;s lesson</h1>
+          <p className="text-body mt-2">
+            focus on one concept at a time. take your time to understand and reflect.
+          </p>
+        </div>
+
+        {/* Viewing Completed Day Banner */}
+        {dlu.isCompleted && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 flex items-center gap-3 rounded-xl px-4 py-3"
+            style={{
+              backgroundColor: "rgba(34, 197, 94, 0.1)",
+              border: "1px solid rgba(34, 197, 94, 0.3)",
+            }}
           >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </Link>
+            <div
+              className="flex h-8 w-8 items-center justify-center rounded-full"
+              style={{ backgroundColor: "rgba(34, 197, 94, 0.2)" }}
+            >
+              <Eye className="h-4 w-4" style={{ color: "#22c55e" }} />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium lowercase" style={{ color: "#22c55e" }}>
+                reviewing completed lesson
+              </p>
+              <p className="text-xs lowercase" style={{ color: "rgba(34, 197, 94, 0.8)" }}>
+                you completed this day. your reflections have been saved.
+              </p>
+            </div>
+            <CheckCircle className="h-5 w-5" style={{ color: "#22c55e" }} />
+          </motion.div>
+        )}
 
-          {/* Page Header */}
-          <div className="mb-8 sm:mb-10">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-900">
-                <GraduationCap className="h-6 w-6 text-white" />
-              </div>
-              <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600">
-                {dlu.topicName}
+        {/* Day Navigation */}
+        <DayNavigation
+          currentDay={dlu.dayIndex}
+          totalDays={dlu.totalDays}
+          completedDays={completedDays}
+          topicId={topicId}
+        />
+
+        {/* Concept Title */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8"
+        >
+          <div className="mb-3 flex items-center gap-2">
+            <div
+              className="inline-flex items-center gap-2 rounded-full px-4 py-2"
+              style={{
+                backgroundColor: dlu.isCompleted
+                  ? "rgba(34, 197, 94, 0.15)"
+                  : "var(--accent-glow)",
+              }}
+            >
+              {dlu.isCompleted ? (
+                <CheckCircle className="h-4 w-4" style={{ color: "#22c55e" }} />
+              ) : (
+                <BookOpen className="h-4 w-4" style={{ color: "var(--accent-primary)" }} />
+              )}
+              <span
+                className="text-sm font-medium lowercase"
+                style={{ color: dlu.isCompleted ? "#22c55e" : "var(--accent-primary)" }}
+              >
+                {dlu.isCompleted ? "completed" : "today's concept"}
               </span>
             </div>
-            <h1 className="text-3xl font-medium tracking-tight text-zinc-900 sm:text-4xl">
-              Today&apos;s Lesson
-            </h1>
-            <p className="mt-2 text-base leading-relaxed text-zinc-500">
-              Focus on one concept at a time. Take your time to understand and reflect.
-            </p>
           </div>
-
-          {/* Viewing Completed Day Banner */}
-          {dlu.isCompleted && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-4 flex items-center gap-3 rounded-2xl border border-green-200 bg-green-50 px-4 py-3"
-            >
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
-                <Eye className="h-4 w-4 text-green-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-green-800">
-                  Reviewing completed lesson
-                </p>
-                <p className="text-xs text-green-600">
-                  You completed this day. Your reflections have been saved.
-                </p>
-              </div>
-              <CheckCircle className="h-5 w-5 text-green-500" />
-            </motion.div>
-          )}
-
-          {/* Day Navigation */}
-          <DayNavigation
-            currentDay={dlu.dayIndex}
-            totalDays={dlu.totalDays}
-            completedDays={completedDays}
-            topicId={topicId}
-          />
-
-          {/* Concept Title */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mb-8"
+          <h2
+            className="text-2xl font-medium lowercase tracking-tight sm:text-3xl"
+            style={{ color: "var(--text-white)" }}
           >
-            <div className="mb-3 flex items-center gap-2">
-              <div className={`inline-flex items-center gap-2 rounded-full px-4 py-2 ${
-                dlu.isCompleted ? "bg-green-100" : "bg-zinc-100"
-              }`}>
-                {dlu.isCompleted ? (
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                ) : (
-                  <BookOpen className="h-4 w-4 text-zinc-600" />
-                )}
-                <span className={`text-sm font-medium ${
-                  dlu.isCompleted ? "text-green-700" : "text-zinc-600"
-                }`}>
-                  {dlu.isCompleted ? "Completed" : "Today's Concept"}
-                </span>
-              </div>
-            </div>
-            <h2 className="text-2xl font-medium tracking-tight text-zinc-900 sm:text-3xl">
-              {dlu.conceptName}
-            </h2>
-          </motion.div>
+            {dlu.conceptName}
+          </h2>
+        </motion.div>
 
-          {/* Hook - Curiosity Gap */}
-          {dlu.content.hook && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <Alert className="mb-6 rounded-2xl border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50">
-                <Sparkles className="h-5 w-5 text-amber-600" />
-                <AlertDescription className="text-base font-medium text-amber-800">
-                  {dlu.content.hook}
-                </AlertDescription>
-              </Alert>
-            </motion.div>
-          )}
-
-          {/* Mental Model - The Key Analogy */}
-          {dlu.content.mentalModel && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.15 }}
-              className="mb-6 rounded-3xl border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50 p-6 shadow-xl shadow-indigo-100/30 sm:p-8"
-            >
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100">
-                  <Lightbulb className="h-5 w-5 text-indigo-600" />
-                </div>
-                <h2 className="text-lg font-medium text-indigo-900">
-                  The Mental Model
-                </h2>
-              </div>
-              <div className="prose prose-indigo max-w-none">
-                <p className="whitespace-pre-wrap text-base leading-relaxed text-indigo-800">
-                  {dlu.content.mentalModel}
-                </p>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Concept Explanation */}
+        {/* Hook - Curiosity Gap */}
+        {dlu.content.hook && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="mb-6 rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-xl shadow-zinc-200/30 sm:p-8"
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="mb-6 rounded-xl px-4 py-3"
+            style={{
+              background: "linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(251, 191, 36, 0.1) 100%)",
+              border: "1px solid rgba(245, 158, 11, 0.3)",
+            }}
+          >
+            <div className="flex items-start gap-3">
+              <LogoAnimated className="h-8 w-8 flex-shrink-0" />
+              <p className="text-sm font-medium" style={{ color: "#fbbf24" }}>
+                {dlu.content.hook}
+              </p>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Mental Model - The Key Analogy */}
+        {dlu.content.mentalModel && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="card-dark mb-6"
+            style={{
+              background: "linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, var(--bg-card) 100%)",
+              borderColor: "rgba(99, 102, 241, 0.2)",
+            }}
           >
             <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100">
-                <BookOpen className="h-5 w-5 text-zinc-600" />
+              <div
+                className="flex h-10 w-10 items-center justify-center rounded-xl"
+                style={{ backgroundColor: "rgba(99, 102, 241, 0.15)" }}
+              >
+                <Lightbulb className="h-5 w-5" style={{ color: "#818cf8" }} />
               </div>
-              <h2 className="text-lg font-medium text-zinc-900">
-                Let&apos;s Dive In
+              <h2 className="text-lg font-medium lowercase" style={{ color: "#818cf8" }}>
+                the mental model
               </h2>
             </div>
-            <div className="prose prose-zinc max-w-none">
-              <p className="whitespace-pre-wrap text-base leading-relaxed text-zinc-600">
-                {dlu.content.conceptExplanation}
-              </p>
-            </div>
+            <p
+              className="whitespace-pre-wrap text-base leading-relaxed"
+              style={{ color: "var(--text-gray)" }}
+            >
+              {dlu.content.mentalModel}
+            </p>
           </motion.div>
+        )}
 
-          {/* Concrete Example */}
+        {/* Concept Explanation */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="card-dark mb-6"
+        >
+          <div className="mb-4 flex items-center gap-3">
+            <div className="icon-box">
+              <BookOpen className="h-5 w-5" />
+            </div>
+            <h2 className="text-lg font-medium lowercase" style={{ color: "var(--text-white)" }}>
+              let&apos;s dive in
+            </h2>
+          </div>
+          <p
+            className="whitespace-pre-wrap text-base leading-relaxed"
+            style={{ color: "var(--text-gray)" }}
+          >
+            {dlu.content.conceptExplanation}
+          </p>
+        </motion.div>
+
+        {/* Concrete Example */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.25 }}
+          className="card-dark mb-6"
+        >
+          <div className="mb-4 flex items-center gap-3">
+            <div className="icon-box">
+              <Code className="h-5 w-5" />
+            </div>
+            <h2 className="text-lg font-medium lowercase" style={{ color: "var(--text-white)" }}>
+              example
+            </h2>
+          </div>
+
+          {/* Description */}
+          <p className="mb-4 text-base leading-relaxed" style={{ color: "var(--text-gray)" }}>
+            {dlu.content.concreteExample.description}
+          </p>
+
+          {/* Code Block */}
+          <div className="mb-6">
+            <CodeBlock code={dlu.content.concreteExample.code} />
+          </div>
+
+          {/* Step by Step */}
+          <div>
+            <h3
+              className="mb-3 text-sm font-medium lowercase"
+              style={{ color: "var(--text-white)" }}
+            >
+              step-by-step breakdown
+            </h3>
+            <ol className="space-y-2">
+              {dlu.content.concreteExample.stepByStep.map((step, i) => (
+                <li
+                  key={i}
+                  className="flex items-start gap-3 text-sm"
+                  style={{ color: "var(--text-gray)" }}
+                >
+                  <span className="step-number flex-shrink-0">{i + 1}</span>
+                  <span className="pt-0.5">{step}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </motion.div>
+
+        {/* Reflection Section */}
+        <ReflectionSection
+          prompts={dlu.content.reflectionPrompts}
+          conceptId={dlu.conceptId}
+          onAnswersChange={handleAnswersChange}
+          disabled={dlu.isCompleted}
+        />
+
+        {/* Application Section */}
+        {dlu.content.applicationMoment && (
+          <ApplicationSection
+            task={dlu.content.applicationMoment as DLUApplicationMoment}
+            conceptId={dlu.conceptId}
+            onCompletedChange={setApplicationCompleted}
+            disabled={dlu.isCompleted}
+          />
+        )}
+
+        {/* Synthesis - Tie it Together */}
+        {dlu.content.synthesis && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.25 }}
-            className="mb-6 rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-xl shadow-zinc-200/30 sm:p-8"
+            transition={{ duration: 0.5, delay: 0.45 }}
+            className="mb-6 rounded-xl p-5"
+            style={{
+              backgroundColor: "rgba(34, 197, 94, 0.1)",
+              border: "1px solid rgba(34, 197, 94, 0.2)",
+            }}
           >
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100">
-                <Code className="h-5 w-5 text-zinc-600" />
+            <div className="flex items-start gap-3">
+              <div
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                style={{ backgroundColor: "rgba(34, 197, 94, 0.2)" }}
+              >
+                <CheckCircle className="h-4 w-4" style={{ color: "#22c55e" }} />
               </div>
-              <h2 className="text-lg font-medium text-zinc-900">Example</h2>
-            </div>
-
-            {/* Description */}
-            <p className="mb-4 text-base leading-relaxed text-zinc-600">
-              {dlu.content.concreteExample.description}
-            </p>
-
-            {/* Code Block */}
-            <div className="mb-6">
-              <CodeBlock code={dlu.content.concreteExample.code} />
-            </div>
-
-            {/* Step by Step */}
-            <div>
-              <h3 className="mb-3 text-sm font-medium text-zinc-700">
-                Step-by-Step Breakdown
-              </h3>
-              <ol className="space-y-2">
-                {dlu.content.concreteExample.stepByStep.map((step, i) => (
-                  <li
-                    key={i}
-                    className="flex items-start gap-3 text-sm text-zinc-600"
-                  >
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-xs font-medium text-zinc-700">
-                      {i + 1}
-                    </span>
-                    <span className="pt-0.5">{step}</span>
-                  </li>
-                ))}
-              </ol>
+              <div>
+                <h3
+                  className="mb-1 text-sm font-medium lowercase"
+                  style={{ color: "#22c55e" }}
+                >
+                  key takeaway
+                </h3>
+                <p className="text-sm leading-relaxed" style={{ color: "rgba(34, 197, 94, 0.9)" }}>
+                  {dlu.content.synthesis}
+                </p>
+              </div>
             </div>
           </motion.div>
+        )}
 
-          {/* Reflection Section */}
-          <ReflectionSection
-            prompts={dlu.content.reflectionPrompts}
-            conceptId={dlu.conceptId}
-            onAnswersChange={handleAnswersChange}
-            disabled={dlu.isCompleted}
-          />
+        {/* Next Steps */}
+        {dlu.content.nextSteps && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+            className="mb-6 rounded-xl p-4 text-center"
+            style={{ backgroundColor: "var(--bg-card)" }}
+          >
+            <p className="text-sm lowercase" style={{ color: "var(--text-muted)" }}>
+              <span className="font-medium" style={{ color: "var(--text-gray)" }}>
+                coming up next:
+              </span>{" "}
+              {dlu.content.nextSteps}
+            </p>
+          </motion.div>
+        )}
 
-          {/* Application Section */}
-          {dlu.content.applicationMoment && (
-            <ApplicationSection
-              task={dlu.content.applicationMoment as DLUApplicationMoment}
-              conceptId={dlu.conceptId}
-              onCompletedChange={setApplicationCompleted}
-              disabled={dlu.isCompleted}
-            />
-          )}
-
-          {/* Synthesis - Tie it Together */}
-          {dlu.content.synthesis && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.45 }}
-              className="mb-6 rounded-2xl border-2 border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 p-5"
-            >
-              <div className="flex items-start gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-green-100">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                </div>
-                <div>
-                  <h3 className="mb-1 text-sm font-medium text-green-800">
-                    Key Takeaway
-                  </h3>
-                  <p className="text-sm leading-relaxed text-green-700">
-                    {dlu.content.synthesis}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Next Steps */}
-          {dlu.content.nextSteps && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-              className="mb-6 rounded-2xl bg-zinc-50 p-4 text-center"
-            >
-              <p className="text-sm text-zinc-500">
-                <span className="font-medium text-zinc-700">Coming up next:</span>{" "}
-                {dlu.content.nextSteps}
-              </p>
-            </motion.div>
-          )}
-
-          {/* Complete Day Button */}
-          <CompleteDayButton
-            conceptId={dlu.conceptId}
-            reflectionAnswers={reflectionAnswers}
-            applicationCompleted={applicationCompleted}
-            isAlreadyCompleted={dlu.isCompleted}
-            isLastDay={dlu.dayIndex === dlu.totalDays}
-            topicId={topicId}
-          />
-        </div>
+        {/* Complete Day Button */}
+        <CompleteDayButton
+          conceptId={dlu.conceptId}
+          reflectionAnswers={reflectionAnswers}
+          applicationCompleted={applicationCompleted}
+          isAlreadyCompleted={dlu.isCompleted}
+          isLastDay={dlu.dayIndex === dlu.totalDays}
+          topicId={topicId}
+        />
       </div>
     </div>
   );
